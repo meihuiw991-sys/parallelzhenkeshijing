@@ -1,0 +1,2486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>PARALLELVERSE 景区运营中心</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Inter', sans-serif;
+  background: #f5f6f8;
+  color: #1a1a1a;
+  min-height: 900px;
+  display: flex;
+  overflow-x: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 210px;
+  min-height: 100vh;
+  background: #1a1a1a;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+  transition: width 0.3s ease;
+}
+.sidebar.collapsed { width: 60px; }
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .logo-sub,
+.sidebar.collapsed .nav-label { display: none; }
+.sidebar.collapsed .sidebar-logo { padding: 0 14px 28px; }
+.sidebar.collapsed .sidebar-nav { padding: 0 8px; }
+.sidebar.collapsed .nav-item { justify-content: center; padding: 11px 0; }
+.sidebar.collapsed .nav-icon { margin-right: 0; }
+.sidebar-toggle {
+  position: absolute;
+  top: 16px;
+  right: -14px;
+  width: 28px;
+  height: 28px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 101;
+  transition: transform 0.3s;
+}
+.sidebar-toggle:hover { background: #333; }
+.sidebar-toggle svg { stroke: #fff; width: 14px; height: 14px; fill: none; stroke-width: 2; }
+.sidebar.collapsed .sidebar-toggle { transform: rotate(180deg); }
+.sidebar-logo {
+  padding: 0 20px 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 16px;
+}
+.sidebar-logo .logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #DFA52B, #f0c75e);
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #1a1a1a;
+  font-weight: 700;
+}
+.sidebar-logo .logo-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 1px;
+}
+.sidebar-logo .logo-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 4px;
+}
+.sidebar-nav { flex: 1; padding: 0 12px; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 11px 14px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: rgba(255,255,255,0.6);
+  font-size: 13.5px;
+}
+.nav-item:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.05); }
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(55,55,55,0.9), rgba(45,45,45,0.7));
+  color: #DFA52B;
+  font-weight: 500;
+}
+.nav-item .nav-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+}
+.nav-item.active .nav-icon { opacity: 1; }
+.nav-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+/* Main Content */
+.main {
+  margin-left: 210px;
+  flex: 1;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: margin-left 0.3s ease;
+}
+body.sidebar-collapsed .main { margin-left: 60px; }
+
+/* Top Bar */
+.topbar {
+  height: 48px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.topbar-select {
+  padding: 6px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+  background: #fff;
+  cursor: pointer;
+}
+.topbar-right { display: flex; align-items: center; gap: 20px; }
+.topbar-user {
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer;
+}
+.topbar-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #DFA52B, #f0c75e);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+.topbar-username { font-size: 13px; color: #333; }
+
+/* Content Area */
+.content { padding: 16px 24px; }
+
+/* KPI Cards */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.kpi-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.kpi-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
+.kpi-label { font-size: 11px; color: #888; margin-bottom: 6px; }
+.kpi-value { font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+.kpi-footer { display: flex; align-items: center; justify-content: space-between; }
+.kpi-change { font-size: 11px; display: flex; align-items: center; gap: 3px; }
+.kpi-change.up { color: #2ecc71; }
+.kpi-change.down { color: #e74c3c; }
+.kpi-icon {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Chart Section */
+.chart-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 280px;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.chart-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.chart-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.chart-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.chart-tabs { display: flex; gap: 6px; }
+.chart-tab {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: #888;
+  cursor: pointer;
+  background: #f5f5f5;
+  transition: all 0.2s;
+}
+.chart-tab:hover { color: #333; }
+.chart-tab.active { background: #1a1a1a; color: #fff; }
+.chart-area { width: 100%; height: 150px; }
+
+/* Theme Card */
+.theme-card {
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid rgba(223,165,43,0.2);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.theme-card-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+.theme-card-bg::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.7) 100%);
+}
+.theme-card > *:not(.theme-card-bg) { position: relative; z-index: 1; }
+.theme-card .theme-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  background: rgba(223,165,43,0.3);
+  border: 1px solid rgba(223,165,43,0.5);
+  border-radius: 4px;
+  font-size: 10px;
+  color: #DFA52B;
+  margin-bottom: 8px;
+  width: fit-content;
+}
+.theme-card .theme-name { font-size: 13px; font-weight: 600; margin-bottom: 3px; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+.theme-card .theme-sub { font-size: 11px; color: rgba(255,255,255,0.7); margin-bottom: 10px; }
+.theme-meta { display: flex; gap: 12px; margin-bottom: 8px; }
+.theme-meta-item { font-size: 11px; color: rgba(255,255,255,0.7); }
+.theme-meta-item span { color: #2ecc71; font-weight: 500; }
+.theme-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.theme-tag {
+  padding: 2px 6px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 4px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.9);
+}
+
+/* Middle Row */
+.mid-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.card-title { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 10px; }
+
+/* Heatmap */
+.heatmap-container {
+  width: 100%;
+  height: 150px;
+  background: #fafafa;
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.heatmap-bg {
+  width: 100%; height: 100%;
+  position: relative;
+}
+.heat-dot {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(12px);
+  opacity: 0.7;
+}
+
+/* Bottom Row */
+.bottom-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Funnel */
+.funnel-list { margin-top: 4px; }
+.funnel-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.funnel-label { font-size: 12px; color: #555; margin-bottom: 4px; text-align: left; }
+.funnel-bar-wrap { width: 100%; }
+.funnel-bar {
+  height: 24px;
+  background: linear-gradient(90deg, rgba(223,165,43,0.15), rgba(223,165,43,0.08));
+  border-radius: 4px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+}
+.funnel-bar-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: linear-gradient(90deg, #DFA52B, rgba(223,165,43,0.6));
+  border-radius: 4px;
+  opacity: 0.2;
+}
+.funnel-value { font-size: 12px; color: #333; font-weight: 600; }
+.funnel-rate { font-size: 11px; color: #888; margin-left: auto; padding-right: 8px; }
+
+/* Satisfaction */
+.satisfaction-score {
+  text-align: center;
+  margin-bottom: 10px;
+}
+.satisfaction-number { font-size: 32px; font-weight: 700; color: #1a1a1a; }
+.satisfaction-stars { color: #DFA52B; font-size: 16px; margin: 2px 0; }
+.satisfaction-total { font-size: 11px; color: #888; }
+.satisfaction-dims { margin-top: 8px; }
+.dim-item { display: flex; align-items: center; margin-bottom: 6px; }
+.dim-label { font-size: 12px; color: #666; width: 70px; }
+.dim-bar { flex: 1; height: 6px; background: #f0f0f0; border-radius: 3px; margin: 0 10px; overflow: hidden; }
+.dim-bar-fill { height: 100%; background: linear-gradient(90deg, #DFA52B, #f0c75e); border-radius: 3px; }
+.dim-value { font-size: 12px; color: #333; font-weight: 500; width: 30px; }
+
+/* Top5 */
+.top5-item { display: flex; align-items: center; margin-bottom: 10px; }
+.top5-rank {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  margin-right: 12px;
+}
+.top5-rank.gold { background: rgba(223,165,43,0.15); color: #DFA52B; }
+.top5-rank.silver { background: rgba(150,150,150,0.15); color: #888; }
+.top5-name { font-size: 13px; color: #333; width: 90px; }
+.top5-bar-wrap { flex: 1; margin: 0 12px; }
+.top5-bar { height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; }
+.top5-bar-fill { height: 100%; border-radius: 4px; }
+.top5-value { font-size: 12px; color: #666; width: 50px; text-align: right; }
+
+/* Ring chart container */
+.ring-chart { width: 100%; height: 160px; }
+
+/* Data Table */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.data-table th {
+  text-align: left;
+  padding: 10px 12px;
+  background: #f9f9f9;
+  color: #666;
+  font-weight: 500;
+  border-bottom: 1px solid #eee;
+}
+.data-table td {
+  padding: 10px 12px;
+  color: #333;
+  border-bottom: 1px solid #f5f5f5;
+}
+.data-table tr:hover td { background: #fafafa; }
+.change-up { color: #2ecc71; font-weight: 500; }
+.change-down { color: #e74c3c; font-weight: 500; }
+
+/* Page content */
+.page-content { animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Device page */
+.device-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.device-kpi-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.device-kpi-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.device-kpi-info {}
+.device-kpi-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+.device-kpi-value { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+.device-kpi-unit { font-size: 11px; font-weight: 400; color: #999; }
+.device-kpi-bar { height: 3px; background: #f0f0f0; border-radius: 2px; margin-top: 6px; }
+.device-kpi-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.device-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.device-page-title { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+.device-map-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid #DFA52B;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #DFA52B;
+  background: rgba(223,165,43,0.05);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.device-map-btn:hover { background: rgba(223,165,43,0.12); }
+.device-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.device-filters { display: flex; gap: 10px; }
+.device-filter {
+  padding: 6px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #555;
+  background: #fff;
+  cursor: pointer;
+}
+.device-export-btn {
+  padding: 6px 14px;
+  border: 1px solid #DFA52B;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #DFA52B;
+  background: rgba(223,165,43,0.05);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.device-export-btn:hover { background: rgba(223,165,43,0.12); }
+.device-search {
+  padding: 6px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #333;
+  background: #fff;
+  width: 180px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.device-search:focus { border-color: #DFA52B; }
+.battery-bar {
+  display: inline-block;
+  width: 50px;
+  height: 6px;
+  background: #f0f0f0;
+  border-radius: 3px;
+  vertical-align: middle;
+  margin-right: 6px;
+  overflow: hidden;
+}
+.battery-fill { height: 100%; border-radius: 3px; }
+.battery-text { font-size: 11px; color: #666; }
+.status-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.status-tag.using { background: rgba(223,165,43,0.12); color: #DFA52B; }
+.status-tag.idle { background: rgba(46,204,113,0.12); color: #2ecc71; }
+.status-tag.charging { background: rgba(52,152,219,0.12); color: #3498db; }
+.status-tag.error { background: rgba(231,76,60,0.12); color: #e74c3c; }
+.detail-link { color: #DFA52B; font-size: 12px; cursor: pointer; text-decoration: none; }
+.detail-link:hover { text-decoration: underline; }
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: #666;
+}
+.pagination .page-total { margin-right: 12px; color: #999; }
+.pagination .page-btn {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+  color: #555;
+  transition: all 0.15s;
+}
+.pagination .page-btn:hover { border-color: #DFA52B; color: #DFA52B; }
+.pagination .page-btn.active { background: #DFA52B; border-color: #DFA52B; color: #fff; }
+.pagination .page-btn.disabled { color: #ccc; cursor: default; border-color: #eee; }
+.pagination .page-ellipsis { color: #999; padding: 0 4px; }
+
+/* Experience page */
+.exp-usage-list { padding-top: 8px; }
+.exp-usage-item { margin-bottom: 14px; }
+.exp-usage-head { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.exp-usage-name { font-size: 12px; color: #333; }
+.exp-usage-val { font-size: 12px; color: #888; }
+.exp-usage-bar { height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; }
+.exp-usage-bar-fill { height: 100%; border-radius: 4px; }
+.exp-data-note {
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: #fafafa;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #999;
+  border: 1px solid #f0f0f0;
+}
+
+/* AI Service page */
+.ai-service-stats { padding-top: 4px; }
+.ai-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 12px;
+}
+.ai-stat-row:last-child { border-bottom: none; }
+.ai-stat-label { color: #888; }
+.ai-stat-value { color: #1a1a1a; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  </div>
+  <div class="sidebar-logo">
+    <div class="logo-icon">P</div>
+    <div class="logo-text">PARALLELVERSE</div>
+    <div class="logo-sub">景区运营中心</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" data-page="overview" onclick="switchPage('overview', this)">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+      <span class="nav-label">总览</span>
+    </div>
+    <div class="nav-item" data-page="analysis" onclick="switchPage('analysis', this)">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg></span>
+      <span class="nav-label">经营分析</span>
+    </div>
+    <div class="nav-item" data-page="experience" onclick="switchPage('experience', this)">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg></span>
+      <span class="nav-label">游客体验</span>
+    </div>
+    <div class="nav-item" data-page="device" onclick="switchPage('device', this)">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1"/></svg></span>
+      <span class="nav-label">设备中心</span>
+    </div>
+    <div class="nav-item" data-page="ai" onclick="switchPage('ai', this)">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 1 8 8c0 3-2 5.5-4 7l-4 5-4-5c-2-1.5-4-4-4-7a8 8 0 0 1 8-8z"/><circle cx="12" cy="10" r="2"/></svg></span>
+      <span class="nav-label">AI 服务</span>
+    </div>
+  </nav>
+</aside>
+
+<!-- Main -->
+<main class="main">
+  <!-- Top Bar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <select class="topbar-select" id="themeSelect" onchange="switchTheme(this.value)">
+        <option value="chu">楚风主题包 v2.1</option>
+        <option value="han">汉韵主题包 v1.3</option>
+      </select>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user">
+        <div class="topbar-avatar">李</div>
+        <span class="topbar-username">李运营</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- Overview Page -->
+    <div id="page-overview" class="page-content">
+    <!-- KPI Row -->
+    <div class="kpi-row" id="kpiRow">
+      <div class="kpi-card">
+        <div class="kpi-label">景区客流（今日）</div>
+        <div class="kpi-value">12,856</div>
+        <div class="kpi-footer">
+          <span class="kpi-change up">↑ 12.3%</span>
+          <div class="kpi-icon" style="background:rgba(223,165,43,0.1)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DFA52B" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">AR体验人数（今日）</div>
+        <div class="kpi-value">1,846</div>
+        <div class="kpi-footer">
+          <span class="kpi-change up">↑ 8.7%</span>
+          <div class="kpi-icon" style="background:rgba(108,92,231,0.1)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6c5ce7" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">体验转化率（今日）</div>
+        <div class="kpi-value">14.3%</div>
+        <div class="kpi-footer">
+          <span class="kpi-change up">↑ 2.1%</span>
+          <div class="kpi-icon" style="background:rgba(46,204,113,0.1)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="1.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">平均体验时长（今日）</div>
+        <div class="kpi-value">47 min</div>
+        <div class="kpi-footer">
+          <span class="kpi-change up">↑ 5.2%</span>
+          <div class="kpi-icon" style="background:rgba(52,152,219,0.1)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">今日体验收入</div>
+        <div class="kpi-value">¥72,340</div>
+        <div class="kpi-footer">
+          <span class="kpi-change up">↑ 15.6%</span>
+          <div class="kpi-icon" style="background:rgba(223,165,43,0.1)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DFA52B" stroke-width="1.5"><path d="M12 1v22M7 5h10M7 9h10M8 17h8"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">设备在线率</div>
+        <div class="kpi-value">96%</div>
+        <div class="kpi-footer">
+          <span class="kpi-change down">↓ 1.2%</span>
+          <div class="kpi-icon" style="background:rgba(46,204,113,0.1)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Row -->
+    <div class="chart-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">客流趋势</div>
+          <div class="chart-tabs" data-chart="flow">
+            <span class="chart-tab active" data-period="today">今日</span>
+            <span class="chart-tab" data-period="week">本周</span>
+            <span class="chart-tab" data-period="month">本月</span>
+          </div>
+        </div>
+        <div class="chart-area">
+          <canvas id="flowChart" style="width:100%;height:100%;"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">AR体验趋势</div>
+          <div class="chart-tabs" data-chart="ar">
+            <span class="chart-tab active" data-period="today">今日</span>
+            <span class="chart-tab" data-period="week">本周</span>
+            <span class="chart-tab" data-period="month">本月</span>
+          </div>
+        </div>
+        <div class="chart-area">
+          <canvas id="arChart" style="width:100%;height:100%;"></canvas>
+        </div>
+      </div>
+      <div class="theme-card" id="themeCard">
+        <div class="theme-card-bg" style="background-image:url('y_my06uz0wnhkh7g4iwsbfghyy7zfpttlz4h6vf1f8-9m-w2400-h1792.png')"></div>
+        <div class="theme-badge">运行中</div>
+        <div class="theme-name">楚汉时空 · 楚风主题包</div>
+        <div class="theme-sub">v2.1.3 · 更新于 3 天前</div>
+        <div class="theme-meta">
+          <div class="theme-meta-item">状态 <span>运行中</span></div>
+          <div class="theme-meta-item">版本 <span style="color:#DFA52B">v2.1.3</span></div>
+        </div>
+        <div class="theme-tags">
+          <span class="theme-tag">时空穿越</span>
+          <span class="theme-tag">AI讲解</span>
+          <span class="theme-tag">实景导航</span>
+          <span class="theme-tag">AR互动</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mid Row -->
+    <div class="mid-row">
+      <div class="card">
+        <div class="card-title">景区热力图</div>
+        <div class="heatmap-container" id="heatmapContainer">
+          <img src="196c8340-1de2-4cda-b4da-dcfd457c9b55-1.png" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">功能使用情况</div>
+        <div class="ring-chart" id="chart-feature"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">设备运行状态</div>
+        <div class="ring-chart" id="chart-device"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Row -->
+    <div class="bottom-row">
+      <div class="card">
+        <div class="card-title">体验漏斗</div>
+        <div class="funnel-list" id="funnelList">
+          <div class="funnel-item">
+            <span class="funnel-label">进入景区</span>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:100%">
+                <div class="funnel-bar-fill" style="width:100%"></div>
+                <span class="funnel-value">12,856</span>
+                <span class="funnel-rate">100%</span>
+              </div>
+            </div>
+          </div>
+          <div class="funnel-item">
+            <span class="funnel-label">领取眼镜</span>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:85%">
+                <div class="funnel-bar-fill" style="width:85%"></div>
+                <span class="funnel-value">4,280</span>
+                <span class="funnel-rate">33.3%</span>
+              </div>
+            </div>
+          </div>
+          <div class="funnel-item">
+            <span class="funnel-label">开启穿越</span>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:65%">
+                <div class="funnel-bar-fill" style="width:65%"></div>
+                <span class="funnel-value">2,960</span>
+                <span class="funnel-rate">23.0%</span>
+              </div>
+            </div>
+          </div>
+          <div class="funnel-item">
+            <span class="funnel-label">触发讲解</span>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:48%">
+                <div class="funnel-bar-fill" style="width:48%"></div>
+                <span class="funnel-value">2,105</span>
+                <span class="funnel-rate">16.4%</span>
+              </div>
+            </div>
+          </div>
+          <div class="funnel-item">
+            <span class="funnel-label">完成体验</span>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:35%">
+                <div class="funnel-bar-fill" style="width:35%"></div>
+                <span class="funnel-value">1,846</span>
+                <span class="funnel-rate">14.3%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">游客满意度</div>
+        <div id="satisfactionContent">
+          <div class="satisfaction-score">
+            <div class="satisfaction-number">4.7</div>
+            <div class="satisfaction-stars">★★★★★</div>
+            <div class="satisfaction-total">基于 2,368 条评价</div>
+          </div>
+          <div class="satisfaction-dims">
+            <div class="dim-item">
+              <span class="dim-label">内容质量</span>
+              <div class="dim-bar"><div class="dim-bar-fill" style="width:94%"></div></div>
+              <span class="dim-value">4.8</span>
+            </div>
+            <div class="dim-item">
+              <span class="dim-label">设备体验</span>
+              <div class="dim-bar"><div class="dim-bar-fill" style="width:90%"></div></div>
+              <span class="dim-value">4.6</span>
+            </div>
+            <div class="dim-item">
+              <span class="dim-label">互动效果</span>
+              <div class="dim-bar"><div class="dim-bar-fill" style="width:92%"></div></div>
+              <span class="dim-value">4.7</span>
+            </div>
+            <div class="dim-item">
+              <span class="dim-label">服务态度</span>
+              <div class="dim-bar"><div class="dim-bar-fill" style="width:96%"></div></div>
+              <span class="dim-value">4.9</span>
+            </div>
+            <div class="dim-item">
+              <span class="dim-label">性价比</span>
+              <div class="dim-bar"><div class="dim-bar-fill" style="width:86%"></div></div>
+              <span class="dim-value">4.4</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">热门景点 TOP5</div>
+        <div class="top5-list" id="top5List">
+          <div class="top5-item">
+            <div class="top5-rank gold">1</div>
+            <span class="top5-name">楚王宫遗址</span>
+            <div class="top5-bar-wrap"><div class="top5-bar"><div class="top5-bar-fill" style="width:100%;background:linear-gradient(90deg,#DFA52B,#f0c75e)"></div></div></div>
+            <span class="top5-value">3,420</span>
+          </div>
+          <div class="top5-item">
+            <div class="top5-rank gold">2</div>
+            <span class="top5-name">古战场</span>
+            <div class="top5-bar-wrap"><div class="top5-bar"><div class="top5-bar-fill" style="width:78%;background:linear-gradient(90deg,#DFA52B,#f0c75e)"></div></div></div>
+            <span class="top5-value">2,680</span>
+          </div>
+          <div class="top5-item">
+            <div class="top5-rank gold">3</div>
+            <span class="top5-name">编钟乐坊</span>
+            <div class="top5-bar-wrap"><div class="top5-bar"><div class="top5-bar-fill" style="width:62%;background:linear-gradient(90deg,#DFA52B,#f0c75e)"></div></div></div>
+            <span class="top5-value">2,120</span>
+          </div>
+          <div class="top5-item">
+            <div class="top5-rank silver">4</div>
+            <span class="top5-name">丝绸之路馆</span>
+            <div class="top5-bar-wrap"><div class="top5-bar"><div class="top5-bar-fill" style="width:48%;background:#ccc"></div></div></div>
+            <span class="top5-value">1,640</span>
+          </div>
+          <div class="top5-item">
+            <div class="top5-rank silver">5</div>
+            <span class="top5-name">漆器工坊</span>
+            <div class="top5-bar-wrap"><div class="top5-bar"><div class="top5-bar-fill" style="width:35%;background:#ccc"></div></div></div>
+            <span class="top5-value">1,200</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div><!-- end page-overview -->
+
+    <!-- Analysis Page -->
+    <div id="page-analysis" class="page-content" style="display:none">
+      <!-- KPI Row -->
+      <div class="kpi-row" id="analysisKpiRow" style="grid-template-columns:repeat(4, minmax(0, 1fr))">
+        <div class="kpi-card">
+          <div class="kpi-label">今日客流</div>
+          <div class="kpi-value">12,856</div>
+          <div class="kpi-footer">
+            <span class="kpi-change up">↑ 12.3%</span>
+            <div class="kpi-icon" style="background:rgba(223,165,43,0.1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DFA52B" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">本周客流</div>
+          <div class="kpi-value">86,421</div>
+          <div class="kpi-footer">
+            <span class="kpi-change up">↑ 8.5%</span>
+            <div class="kpi-icon" style="background:rgba(108,92,231,0.1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6c5ce7" stroke-width="1.5"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">本月客流</div>
+          <div class="kpi-value">326,819</div>
+          <div class="kpi-footer">
+            <span class="kpi-change up">↑ 6.2%</span>
+            <div class="kpi-icon" style="background:rgba(46,204,113,0.1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="1.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">年累计客流</div>
+          <div class="kpi-value">2,415,687</div>
+          <div class="kpi-footer">
+            <span class="kpi-change up">↑ 18.7%</span>
+            <div class="kpi-icon" style="background:rgba(52,152,219,0.1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="mid-row">
+        <div class="card">
+          <div class="card-title">客流趋势对比</div>
+          <div class="chart-area" id="analysisFlowChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">游客来源占比</div>
+          <div class="ring-chart" id="analysisSourceChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">客流时段分布</div>
+          <div class="chart-area" id="analysisBarChart"></div>
+        </div>
+      </div>
+
+      <!-- Data Table -->
+      <div class="card">
+        <div class="card-title">客流明细</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>总客流</th>
+              <th>游客数</th>
+              <th>团队游客</th>
+              <th>线上预约</th>
+              <th>散客</th>
+              <th>较昨日</th>
+            </tr>
+          </thead>
+          <tbody id="analysisTableBody">
+            <tr>
+              <td>2026-08-15</td>
+              <td>12,856</td>
+              <td>11,420</td>
+              <td>3,280</td>
+              <td>5,640</td>
+              <td>2,500</td>
+              <td class="change-up">+1,420 ↑</td>
+            </tr>
+            <tr>
+              <td>2026-08-14</td>
+              <td>11,436</td>
+              <td>10,180</td>
+              <td>2,950</td>
+              <td>4,980</td>
+              <td>2,250</td>
+              <td class="change-up">+680 ↑</td>
+            </tr>
+            <tr>
+              <td>2026-08-13</td>
+              <td>10,756</td>
+              <td>9,620</td>
+              <td>2,780</td>
+              <td>4,560</td>
+              <td>2,280</td>
+              <td class="change-down">-320 ↓</td>
+            </tr>
+            <tr>
+              <td>2026-08-12</td>
+              <td>11,076</td>
+              <td>9,840</td>
+              <td>3,120</td>
+              <td>4,820</td>
+              <td>1,900</td>
+              <td class="change-up">+1,256 ↑</td>
+            </tr>
+            <tr>
+              <td>2026-08-11</td>
+              <td>9,820</td>
+              <td>8,760</td>
+              <td>2,640</td>
+              <td>4,120</td>
+              <td>2,000</td>
+              <td class="change-down">-580 ↓</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div><!-- end page-analysis -->
+
+    <!-- Device Page -->
+    <div id="page-device" class="page-content" style="display:none">
+      <!-- Page Header -->
+      <div class="device-page-header">
+        <div class="device-page-title">设备管理</div>
+        <button class="device-map-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16M16 6v16"/></svg>
+          设备地图
+        </button>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="device-kpi-row" id="deviceKpiRow">
+        <div class="device-kpi-card">
+          <div class="device-kpi-icon" style="background:rgba(100,100,100,0.08)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1"/></svg>
+          </div>
+          <div class="device-kpi-info">
+            <div class="device-kpi-label">全部设备</div>
+            <div class="device-kpi-value">300 <span class="device-kpi-unit">台</span></div>
+            <div class="device-kpi-bar"><div class="device-kpi-bar-fill" style="width:100%;background:#555"></div></div>
+          </div>
+        </div>
+        <div class="device-kpi-card">
+          <div class="device-kpi-icon" style="background:rgba(223,165,43,0.1)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DFA52B" stroke-width="1.5"><path d="M12 2a8 8 0 0 1 8 8c0 3-2 5.5-4 7l-4 5-4-5c-2-1.5-4-4-4-7a8 8 0 0 1 8-8z"/><circle cx="12" cy="10" r="2"/></svg>
+          </div>
+          <div class="device-kpi-info">
+            <div class="device-kpi-label">使用中 <span style="color:#999;font-size:10px">54%</span></div>
+            <div class="device-kpi-value">162 <span class="device-kpi-unit">台</span></div>
+            <div class="device-kpi-bar"><div class="device-kpi-bar-fill" style="width:54%;background:#DFA52B"></div></div>
+          </div>
+        </div>
+        <div class="device-kpi-card">
+          <div class="device-kpi-icon" style="background:rgba(46,204,113,0.1)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
+          </div>
+          <div class="device-kpi-info">
+            <div class="device-kpi-label">空闲 <span style="color:#999;font-size:10px">36%</span></div>
+            <div class="device-kpi-value">108 <span class="device-kpi-unit">台</span></div>
+            <div class="device-kpi-bar"><div class="device-kpi-bar-fill" style="width:36%;background:#2ecc71"></div></div>
+          </div>
+        </div>
+        <div class="device-kpi-card">
+          <div class="device-kpi-icon" style="background:rgba(52,152,219,0.1)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <div class="device-kpi-info">
+            <div class="device-kpi-label">充电中 <span style="color:#999;font-size:10px">9%</span></div>
+            <div class="device-kpi-value">27 <span class="device-kpi-unit">台</span></div>
+            <div class="device-kpi-bar"><div class="device-kpi-bar-fill" style="width:9%;background:#3498db"></div></div>
+          </div>
+        </div>
+        <div class="device-kpi-card">
+          <div class="device-kpi-icon" style="background:rgba(231,76,60,0.1)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          </div>
+          <div class="device-kpi-info">
+            <div class="device-kpi-label">异常 <span style="color:#999;font-size:10px">1%</span></div>
+            <div class="device-kpi-value">3 <span class="device-kpi-unit">台</span></div>
+            <div class="device-kpi-bar"><div class="device-kpi-bar-fill" style="width:1%;background:#e74c3c"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="mid-row">
+        <div class="card">
+          <div class="card-title">设备在线率趋势</div>
+          <div class="chart-area" id="deviceOnlineChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">设备电量分布</div>
+          <div class="ring-chart" id="deviceBatteryChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">今日设备使用时长</div>
+          <div class="chart-area" id="deviceUsageChart"></div>
+        </div>
+      </div>
+
+      <!-- Device Table Card -->
+      <div class="card">
+        <div class="device-toolbar">
+          <div class="device-filters">
+            <select class="device-filter">
+              <option>全部状态</option>
+              <option>使用中</option>
+              <option>空闲</option>
+              <option>充电中</option>
+              <option>异常</option>
+            </select>
+            <select class="device-filter">
+              <option>全部分组</option>
+              <option>A区 · 楚王宫</option>
+              <option>B区 · 古战场</option>
+              <option>C区 · 编钟乐坊</option>
+            </select>
+            <input type="text" class="device-search" placeholder="搜索设备编号/位置...">
+          </div>
+          <button class="device-export-btn">导出明细</button>
+        </div>
+        <table class="data-table" id="deviceTable">
+          <thead>
+            <tr>
+              <th>设备编号</th>
+              <th>状态</th>
+              <th>电量</th>
+              <th>今日使用时长</th>
+              <th>今日使用人数</th>
+              <th>最后配对时间</th>
+              <th>位置</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="deviceTableBody">
+            <tr>
+              <td>PV-0001</td>
+              <td><span class="status-tag using">使用中</span></td>
+              <td><div class="battery-bar"><div class="battery-fill" style="width:78%;background:#2ecc71"></div></div><span class="battery-text">78%</span></td>
+              <td>5h 32min</td>
+              <td>12</td>
+              <td>14:23</td>
+              <td>A区 · 楚王宫</td>
+              <td><a class="detail-link">查看详情</a></td>
+            </tr>
+            <tr>
+              <td>PV-0002</td>
+              <td><span class="status-tag idle">空闲</span></td>
+              <td><div class="battery-bar"><div class="battery-fill" style="width:92%;background:#2ecc71"></div></div><span class="battery-text">92%</span></td>
+              <td>3h 18min</td>
+              <td>8</td>
+              <td>13:50</td>
+              <td>B区 · 古战场</td>
+              <td><a class="detail-link">查看详情</a></td>
+            </tr>
+            <tr>
+              <td>PV-0003</td>
+              <td><span class="status-tag using">使用中</span></td>
+              <td><div class="battery-bar"><div class="battery-fill" style="width:45%;background:#f39c12"></div></div><span class="battery-text">45%</span></td>
+              <td>6h 05min</td>
+              <td>14</td>
+              <td>14:31</td>
+              <td>A区 · 楚王宫</td>
+              <td><a class="detail-link">查看详情</a></td>
+            </tr>
+            <tr>
+              <td>PV-0004</td>
+              <td><span class="status-tag charging">充电中</span></td>
+              <td><div class="battery-bar"><div class="battery-fill" style="width:32%;background:#e74c3c"></div></div><span class="battery-text">32%</span></td>
+              <td>4h 42min</td>
+              <td>10</td>
+              <td>12:15</td>
+              <td>C区 · 编钟乐坊</td>
+              <td><a class="detail-link">查看详情</a></td>
+            </tr>
+            <tr>
+              <td>PV-0005</td>
+              <td><span class="status-tag error">异常</span></td>
+              <td><div class="battery-bar"><div class="battery-fill" style="width:0%;background:#e74c3c"></div></div><span class="battery-text">0%</span></td>
+              <td>1h 20min</td>
+              <td>3</td>
+              <td>09:47</td>
+              <td>B区 · 古战场</td>
+              <td><a class="detail-link">查看详情</a></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <span class="page-total">共 300 条</span>
+          <span class="page-btn disabled">‹</span>
+          <span class="page-btn active">1</span>
+          <span class="page-btn">2</span>
+          <span class="page-btn">3</span>
+          <span class="page-btn">4</span>
+          <span class="page-btn">5</span>
+          <span class="page-ellipsis">...</span>
+          <span class="page-btn">30</span>
+          <span class="page-btn">›</span>
+        </div>
+      </div>
+    </div><!-- end page-device -->
+
+    <!-- Experience Page -->
+    <div id="page-experience" class="page-content" style="display:none">
+      <!-- KPI Row -->
+      <div class="kpi-row" id="expKpiRow" style="grid-template-columns:repeat(5, minmax(0, 1fr))">
+        <div class="kpi-card">
+          <div class="kpi-label">今日体验人数</div>
+          <div class="kpi-value">1,846</div>
+          <div class="kpi-footer"><span class="kpi-change up">↑ 8.7%</span><div class="kpi-icon" style="background:rgba(223,165,43,0.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DFA52B" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">平均体验时长</div>
+          <div class="kpi-value">47 min</div>
+          <div class="kpi-footer"><span class="kpi-change up">↑ 5.2%</span><div class="kpi-icon" style="background:rgba(52,152,219,0.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">人均触发次数</div>
+          <div class="kpi-value">7.4 次</div>
+          <div class="kpi-footer"><span class="kpi-change up">↑ 3.1%</span><div class="kpi-icon" style="background:rgba(108,92,231,0.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6c5ce7" stroke-width="1.5"><path d="M4 4h16v16H4z"/><path d="M4 12h16M12 4v16"/></svg></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">导航使用占比</div>
+          <div class="kpi-value">46%</div>
+          <div class="kpi-footer"><span class="kpi-change up">↑ 2.8%</span><div class="kpi-icon" style="background:rgba(46,204,113,0.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">完整体验率</div>
+          <div class="kpi-value">68%</div>
+          <div class="kpi-footer"><span class="kpi-change down">↓ 1.5%</span><div class="kpi-icon" style="background:rgba(231,76,60,0.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e17055" stroke-width="1.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg></div></div>
+        </div>
+      </div>
+
+      <!-- Row 2: Trend + Usage + Top5 -->
+      <div class="mid-row">
+        <div class="card">
+          <div class="card-title">功能使用趋势</div>
+          <div class="chart-area" id="expTrendChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">功能使用率</div>
+          <div class="exp-usage-list" id="expUsageList">
+            <div class="exp-usage-item"><div class="exp-usage-head"><span class="exp-usage-name">时空穿越</span><span class="exp-usage-val">680 人</span></div><div class="exp-usage-bar"><div class="exp-usage-bar-fill" style="width:100%;background:#DFA52B"></div></div></div>
+            <div class="exp-usage-item"><div class="exp-usage-head"><span class="exp-usage-name">AI讲解</span><span class="exp-usage-val">520 人</span></div><div class="exp-usage-bar"><div class="exp-usage-bar-fill" style="width:76%;background:#6c5ce7"></div></div></div>
+            <div class="exp-usage-item"><div class="exp-usage-head"><span class="exp-usage-name">实景导航</span><span class="exp-usage-val">380 人</span></div><div class="exp-usage-bar"><div class="exp-usage-bar-fill" style="width:56%;background:#3498db"></div></div></div>
+            <div class="exp-usage-item"><div class="exp-usage-head"><span class="exp-usage-name">AR合影</span><span class="exp-usage-val">180 人</span></div><div class="exp-usage-bar"><div class="exp-usage-bar-fill" style="width:26%;background:#2ecc71"></div></div></div>
+            <div class="exp-usage-item"><div class="exp-usage-head"><span class="exp-usage-name">语音互动</span><span class="exp-usage-val">86 人</span></div><div class="exp-usage-bar"><div class="exp-usage-bar-fill" style="width:13%;background:#e17055"></div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">热门功能 TOP5</div>
+          <div class="exp-top5" id="expTop5">
+            <div class="top5-item"><div class="top5-rank gold">1</div><span class="top5-name">时空穿越</span><span class="top5-value" style="margin-left:auto">2,480 次</span></div>
+            <div class="top5-item"><div class="top5-rank gold">2</div><span class="top5-name">AI讲解</span><span class="top5-value" style="margin-left:auto">1,920 次</span></div>
+            <div class="top5-item"><div class="top5-rank gold">3</div><span class="top5-name">实景导航</span><span class="top5-value" style="margin-left:auto">1,540 次</span></div>
+            <div class="top5-item"><div class="top5-rank silver">4</div><span class="top5-name">AR合影</span><span class="top5-value" style="margin-left:auto">860 次</span></div>
+            <div class="top5-item"><div class="top5-rank silver">5</div><span class="top5-name">语音互动</span><span class="top5-value" style="margin-left:auto">420 次</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3: Heatmap + Device Pie + Funnel -->
+      <div class="mid-row">
+        <div class="card">
+          <div class="card-title">功能使用时段分布</div>
+          <div class="chart-area" id="expHeatmapChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">功能使用设备占比</div>
+          <div class="ring-chart" id="expDevicePie"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">功能使用转化漏斗</div>
+          <div class="exp-funnel" id="expFunnel">
+            <div class="funnel-item"><span class="funnel-label">体验开始</span><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:100%"><div class="funnel-bar-fill" style="width:100%"></div><span class="funnel-value">1,846</span><span class="funnel-rate">100%</span></div></div></div>
+            <div class="funnel-item"><span class="funnel-label">触发功能</span><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:82%"><div class="funnel-bar-fill" style="width:82%"></div><span class="funnel-value">1,513</span><span class="funnel-rate">82%</span></div></div></div>
+            <div class="funnel-item"><span class="funnel-label">深度使用</span><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:58%"><div class="funnel-bar-fill" style="width:58%"></div><span class="funnel-value">1,071</span><span class="funnel-rate">58%</span></div></div></div>
+            <div class="funnel-item"><span class="funnel-label">完成体验</span><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:68%"><div class="funnel-bar-fill" style="width:68%"></div><span class="funnel-value">1,255</span><span class="funnel-rate">68%</span></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data note -->
+      <div class="exp-data-note">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        数据统计截至当日最新时间，体验时长 ≥ 5 分钟计入有效体验，转化漏斗基于完整会话计算。
+      </div>
+    </div><!-- end page-experience -->
+
+    <!-- AI Service Page -->
+    <div id="page-ai" class="page-content" style="display:none">
+      <!-- KPI Row -->
+      <div class="kpi-row" id="aiKpiRow" style="grid-template-columns:repeat(5, minmax(0, 1fr))">
+        <div class="kpi-card"><div class="kpi-label">AI服务调用量</div><div class="kpi-value">24,862</div><div class="kpi-footer"><span class="kpi-change up">↑ 18.3%</span><div class="kpi-icon" style="background:rgba(223,165,43,0.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DFA52B" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div></div></div>
+        <div class="kpi-card"><div class="kpi-label">AI服务成功率</div><div class="kpi-value">99.2%</div><div class="kpi-footer"><span class="kpi-change up">↑ 0.3%</span><div class="kpi-icon" style="background:rgba(46,204,113,0.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg></div></div></div>
+        <div class="kpi-card"><div class="kpi-label">AI讲解服务人数</div><div class="kpi-value">1,432</div><div class="kpi-footer"><span class="kpi-change up">↑ 12.5%</span><div class="kpi-icon" style="background:rgba(108,92,231,0.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6c5ce7" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg></div></div></div>
+        <div class="kpi-card"><div class="kpi-label">AI平均响应时间</div><div class="kpi-value">1.8 s</div><div class="kpi-footer"><span class="kpi-change up">↓ 0.2s</span><div class="kpi-icon" style="background:rgba(52,152,219,0.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div></div>
+        <div class="kpi-card"><div class="kpi-label">AI服务满意度</div><div class="kpi-value">4.8 分</div><div class="kpi-footer"><span class="kpi-change up">↑ 0.1</span><div class="kpi-icon" style="background:rgba(243,156,18,0.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f39c12" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div></div></div>
+      </div>
+
+      <!-- Row 2 -->
+      <div class="mid-row">
+        <div class="card">
+          <div class="card-title">AI服务调用趋势</div>
+          <div class="chart-area" id="aiTrendChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">AI模型使用情况</div>
+          <div class="exp-usage-list" id="aiModelList">
+            <div class="exp-usage-item"><div class="exp-usage-head"><span class="exp-usage-name">GPT-景区讲解</span><span class="exp-usage-val">12,480 次 · 1.6s</span></div><div class="exp-usage-bar"><div class="exp-usage-bar-fill" style="width:100%;background:#DFA52B"></div></div></div>
+            <div class="exp-usage-item"><div class="exp-usage-head"><span class="exp-usage-name">NLP-智能问答</span><span class="exp-usage-val">8,240 次 · 2.1s</span></div><div class="exp-usage-bar"><div class="exp-usage-bar-fill" style="width:66%;background:#6c5ce7"></div></div></div>
+            <div class="exp-usage-item"><div class="exp-usage-head"><span class="exp-usage-name">CV-实景导航</span><span class="exp-usage-val">4,142 次 · 1.4s</span></div><div class="exp-usage-bar"><div class="exp-usage-bar-fill" style="width:33%;background:#3498db"></div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">AI服务实时状态</div>
+          <div class="ring-chart" id="aiStatusChart"></div>
+        </div>
+      </div>
+
+      <!-- Row 3: Service Cards -->
+      <div class="mid-row" id="aiServiceCards">
+        <div class="card">
+          <div class="card-title" style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#DFA52B;display:inline-block"></span> AI讲解</div>
+          <div class="ai-service-stats">
+            <div class="ai-stat-row"><span class="ai-stat-label">服务人数</span><span class="ai-stat-value">1,432 人</span></div>
+            <div class="ai-stat-row"><span class="ai-stat-label">平均停留</span><span class="ai-stat-value">8.2 min</span></div>
+            <div class="ai-stat-row"><span class="ai-stat-label">满意度</span><span class="ai-stat-value">4.9 分</span></div>
+            <div class="ai-stat-row"><span class="ai-stat-label">完播率</span><span class="ai-stat-value">78%</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#6c5ce7;display:inline-block"></span> 智能问答</div>
+          <div class="ai-service-stats">
+            <div class="ai-stat-row"><span class="ai-stat-label">服务次数</span><span class="ai-stat-value">8,240 次</span></div>
+            <div class="ai-stat-row"><span class="ai-stat-label">平均响应</span><span class="ai-stat-value">2.1 s</span></div>
+            <div class="ai-stat-row"><span class="ai-stat-label">满意度</span><span class="ai-stat-value">4.7 分</span></div>
+            <div class="ai-stat-row"><span class="ai-stat-label">解决率</span><span class="ai-stat-value">92%</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#3498db;display:inline-block"></span> 智能导航</div>
+          <div class="ai-service-stats">
+            <div class="ai-stat-row"><span class="ai-stat-label">服务次数</span><span class="ai-stat-value">4,142 次</span></div>
+            <div class="ai-stat-row"><span class="ai-stat-label">平均响应</span><span class="ai-stat-value">1.4 s</span></div>
+            <div class="ai-stat-row"><span class="ai-stat-label">采纳率</span><span class="ai-stat-value">86%</span></div>
+            <div class="ai-stat-row"><span class="ai-stat-label">到达率</span><span class="ai-stat-value">91%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Service Table -->
+      <div class="card">
+        <div class="card-title">AI服务明细</div>
+        <table class="data-table" id="aiTable">
+          <thead>
+            <tr><th>服务名称</th><th>服务类型</th><th>当前状态</th><th>今日调用量</th><th>成功率</th><th>平均响应</th><th>当前负载</th><th>更新时间</th><th>操作</th></tr>
+          </thead>
+          <tbody id="aiTableBody">
+            <tr><td>楚文化讲解引擎</td><td>AI讲解</td><td><span class="status-tag idle">正常</span></td><td>12,480</td><td>99.5%</td><td>1.6s</td><td><div class="battery-bar"><div class="battery-fill" style="width:62%;background:#2ecc71"></div></div><span class="battery-text">62%</span></td><td>14:32</td><td><a class="detail-link">查看详情</a></td></tr>
+            <tr><td>景区智能问答</td><td>智能问答</td><td><span class="status-tag idle">正常</span></td><td>8,240</td><td>98.8%</td><td>2.1s</td><td><div class="battery-bar"><div class="battery-fill" style="width:78%;background:#f39c12"></div></div><span class="battery-text">78%</span></td><td>14:32</td><td><a class="detail-link">查看详情</a></td></tr>
+            <tr><td>实景AR导航</td><td>智能导航</td><td><span class="status-tag idle">正常</span></td><td>4,142</td><td>99.6%</td><td>1.4s</td><td><div class="battery-bar"><div class="battery-fill" style="width:45%;background:#2ecc71"></div></div><span class="battery-text">45%</span></td><td>14:32</td><td><a class="detail-link">查看详情</a></td></tr>
+            <tr><td>语音交互引擎</td><td>语音识别</td><td><span class="status-tag using">负载高</span></td><td>3,860</td><td>97.2%</td><td>2.8s</td><td><div class="battery-bar"><div class="battery-fill" style="width:89%;background:#e74c3c"></div></div><span class="battery-text">89%</span></td><td>14:30</td><td><a class="detail-link">查看详情</a></td></tr>
+            <tr><td>图像识别服务</td><td>CV识别</td><td><span class="status-tag idle">正常</span></td><td>2,140</td><td>99.1%</td><td>1.2s</td><td><div class="battery-bar"><div class="battery-fill" style="width:35%;background:#2ecc71"></div></div><span class="battery-text">35%</span></td><td>14:32</td><td><a class="detail-link">查看详情</a></td></tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <span class="page-total">共 12 条</span>
+          <span class="page-btn disabled">‹</span>
+          <span class="page-btn active">1</span>
+          <span class="page-btn">2</span>
+          <span class="page-btn">›</span>
+        </div>
+      </div>
+    </div><!-- end page-ai -->
+
+  </div>
+</main>
+
+<script>
+// Sidebar toggle
+function toggleSidebar() {
+  var sidebar = document.getElementById('sidebar');
+  sidebar.classList.toggle('collapsed');
+  document.body.classList.toggle('sidebar-collapsed');
+  setTimeout(function() {
+    chartFeature.resize();
+    chartDevice.resize();
+  }, 320);
+}
+
+// Chart data
+var chartData = {
+  flow: {
+    today: {
+      labels: ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'],
+      main: [320,480,860,1450,1820,2100,1680,1420,1750,2050,1860,1520,1280,980,650],
+      compare: [280,420,750,1280,1650,1900,1580,1350,1600,1850,1720,1480,1200,920,600]
+    },
+    week: {
+      labels: ['周一','周二','周三','周四','周五','周六','周日'],
+      main: [8500,9200,8800,10500,11200,12856,11800],
+      compare: [7800,8600,8200,9400,10100,11500,10600]
+    },
+    month: {
+      labels: ['1日','3日','5日','7日','9日','11日','13日','15日','17日','19日','21日','23日','25日','27日','29日','31日'],
+      main: [9800,10200,8900,11500,12300,10800,9600,12856,11200,10500,13200,12800,11600,10900,12100,11500],
+      compare: [8900,9500,8200,10200,11000,9800,8800,11500,10100,9600,12000,11500,10400,9800,11000,10200]
+    }
+  },
+  ar: {
+    today: {
+      labels: ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'],
+      main: [20,45,120,210,280,320,250,195,265,310,275,220,180,130,68],
+      compare: [15,35,95,180,240,280,220,175,230,270,245,200,160,110,55]
+    },
+    week: {
+      labels: ['周一','周二','周三','周四','周五','周六','周日'],
+      main: [1200,1380,1150,1520,1680,1846,1720],
+      compare: [1050,1200,1020,1350,1480,1650,1520]
+    },
+    month: {
+      labels: ['1日','3日','5日','7日','9日','11日','13日','15日','17日','19日','21日','23日','25日','27日','29日','31日'],
+      main: [1350,1480,1200,1620,1750,1420,1280,1846,1560,1480,1820,1700,1520,1400,1680,1580],
+      compare: [1180,1320,1080,1450,1560,1280,1150,1650,1400,1320,1620,1520,1360,1250,1500,1420]
+    }
+  }
+};
+
+function drawChart(canvasId, chartType, period) {
+  var canvas = document.getElementById(canvasId);
+  var dpr = window.devicePixelRatio || 1;
+  var rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  var ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  var w = rect.width;
+  var h = rect.height;
+  var data = chartData[chartType][period];
+  var padding = { top: 16, right: 20, bottom: 30, left: 10 };
+  var chartW = w - padding.left - padding.right;
+  var chartH = h - padding.top - padding.bottom;
+
+  ctx.clearRect(0, 0, w, h);
+
+  var allValues = data.main.concat(data.compare);
+  var maxVal = Math.max.apply(null, allValues) * 1.1;
+  var minVal = Math.min.apply(null, allValues) * 0.8;
+  var range = maxVal - minVal;
+
+  function getX(i) { return padding.left + (i / (data.main.length - 1)) * chartW; }
+  function getY(val) { return padding.top + (1 - (val - minVal) / range) * chartH; }
+
+  // Grid lines
+  ctx.strokeStyle = '#f0f0f0';
+  ctx.lineWidth = 1;
+  for (var i = 0; i < 4; i++) {
+    var y = padding.top + (i / 3) * chartH;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(w - padding.right, y);
+    ctx.stroke();
+  }
+
+  // Compare line (grey)
+  ctx.strokeStyle = '#e0e0e0';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  data.compare.forEach(function(val, i) {
+    var x = getX(i); var y = getY(val);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Main line fill
+  ctx.beginPath();
+  data.main.forEach(function(val, i) {
+    var x = getX(i); var y = getY(val);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(getX(data.main.length - 1), padding.top + chartH);
+  ctx.lineTo(padding.left, padding.top + chartH);
+  ctx.closePath();
+  var grad = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
+  grad.addColorStop(0, 'rgba(223,165,43,0.2)');
+  grad.addColorStop(1, 'rgba(223,165,43,0)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Main line stroke
+  ctx.strokeStyle = '#DFA52B';
+  ctx.lineWidth = 3;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  data.main.forEach(function(val, i) {
+    var x = getX(i); var y = getY(val);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#aaa';
+  ctx.font = '11px -apple-system, PingFang SC, sans-serif';
+  ctx.textAlign = 'center';
+  var labelWidth = ctx.measureText(data.labels[Math.floor(data.labels.length / 2)]).width;
+  var maxLabels = Math.floor(chartW / (labelWidth + 24));
+  var step = Math.max(1, Math.ceil(data.labels.length / maxLabels));
+  data.labels.forEach(function(label, i) {
+    if (i % step === 0) {
+      ctx.fillText(label, getX(i), h - 6);
+    }
+  });
+}
+
+// Initial draw
+drawChart('flowChart', 'flow', 'today');
+drawChart('arChart', 'ar', 'today');
+
+// Chart tab switching
+document.querySelectorAll('.chart-tabs').forEach(function(tabs) {
+  var chartType = tabs.dataset.chart;
+  tabs.querySelectorAll('.chart-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      tabs.querySelectorAll('.chart-tab').forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      var period = tab.dataset.period;
+      var canvasId = chartType === 'flow' ? 'flowChart' : 'arChart';
+      drawChart(canvasId, chartType, period);
+    });
+  });
+});
+
+// Feature usage ring (ECharts)
+var chartFeature = echarts.init(document.getElementById('chart-feature'));
+chartFeature.setOption({
+  tooltip: { trigger: 'item', backgroundColor: '#fff', borderColor: '#eee', textStyle: { color: '#333', fontSize: 12 } },
+  legend: { bottom: 0, itemWidth: 10, itemHeight: 10, itemGap: 12, textStyle: { fontSize: 10, color: '#666' } },
+  series: [{
+    type: 'pie',
+    radius: ['35%', '55%'],
+    center: ['50%', '35%'],
+    avoidLabelOverlap: true,
+    label: { show: true, fontSize: 10, color: '#666', formatter: '{b} {c}', alignTo: 'labelLine' },
+    labelLine: { show: true, length: 8, length2: 12, lineStyle: { color: '#ccc' } },
+    data: [
+      { value: 680, name: '时空穿越', itemStyle: { color: '#DFA52B' } },
+      { value: 520, name: 'AI讲解', itemStyle: { color: '#6c5ce7' } },
+      { value: 380, name: '实景导航', itemStyle: { color: '#3498db' } },
+      { value: 180, name: 'AR合影', itemStyle: { color: '#2ecc71' } },
+      { value: 86, name: '语音互动', itemStyle: { color: '#e17055' } }
+    ]
+  }]
+});
+
+// Device status ring (ECharts)
+var chartDevice = echarts.init(document.getElementById('chart-device'));
+chartDevice.setOption({
+  tooltip: { trigger: 'item', backgroundColor: '#fff', borderColor: '#eee', textStyle: { color: '#333', fontSize: 12 } },
+  legend: { bottom: 0, itemWidth: 10, itemHeight: 10, itemGap: 12, textStyle: { fontSize: 10, color: '#666' } },
+  series: [{
+    type: 'pie',
+    radius: ['35%', '55%'],
+    center: ['50%', '35%'],
+    avoidLabelOverlap: true,
+    label: { show: true, fontSize: 10, color: '#666', formatter: '{b} {c}', alignTo: 'labelLine' },
+    labelLine: { show: true, length: 8, length2: 12, lineStyle: { color: '#ccc' } },
+    data: [
+      { value: 186, name: '使用中', itemStyle: { color: '#DFA52B' } },
+      { value: 42, name: '空闲', itemStyle: { color: '#2ecc71' } },
+      { value: 18, name: '充电中', itemStyle: { color: '#3498db' } },
+      { value: 8, name: '异常', itemStyle: { color: '#e74c3c' } }
+    ]
+  }]
+});
+
+// Resize
+window.addEventListener('resize', function() {
+  chartFeature.resize();
+  chartDevice.resize();
+});
+
+// Theme data sets
+var themeDataSets = {
+  chu: {
+    kpi: [
+      { label: '景区客流（今日）', value: '12,856', change: '↑ 12.3%', up: true, iconBg: 'rgba(223,165,43,0.1)', iconColor: '#DFA52B', icon: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>' },
+      { label: 'AR体验人数（今日）', value: '1,846', change: '↑ 8.7%', up: true, iconBg: 'rgba(108,92,231,0.1)', iconColor: '#6c5ce7', icon: '<rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="12" cy="12" r="3"/>' },
+      { label: '体验转化率（今日）', value: '14.3%', change: '↑ 2.1%', up: true, iconBg: 'rgba(46,204,113,0.1)', iconColor: '#2ecc71', icon: '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>' },
+      { label: '平均体验时长（今日）', value: '47 min', change: '↑ 5.2%', up: true, iconBg: 'rgba(52,152,219,0.1)', iconColor: '#3498db', icon: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>' },
+      { label: '今日体验收入', value: '¥72,340', change: '↑ 15.6%', up: true, iconBg: 'rgba(223,165,43,0.1)', iconColor: '#DFA52B', icon: '<path d="M12 1v22M7 5h10M7 9h10M8 17h8"/>' },
+      { label: '设备在线率', value: '96%', change: '↓ 1.2%', up: false, iconBg: 'rgba(46,204,113,0.1)', iconColor: '#2ecc71', icon: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>' }
+    ],
+    themeCard: { badge: '运行中', name: '楚汉时空 · 楚风主题包', sub: 'v2.1.3 · 更新于 3 天前', symbol: '鼎', tags: ['时空穿越','AI讲解','实景导航','AR互动'], statusColor: '#2ecc71', version: 'v2.1.3' },
+    funnel: [
+      { label: '进入景区', value: '12,856', rate: '100%', width: '100%' },
+      { label: '领取眼镜', value: '4,280', rate: '33.3%', width: '85%' },
+      { label: '开启穿越', value: '2,960', rate: '23.0%', width: '65%' },
+      { label: '触发讲解', value: '2,105', rate: '16.4%', width: '48%' },
+      { label: '完成体验', value: '1,846', rate: '14.3%', width: '35%' }
+    ],
+    satisfaction: { score: '4.7', total: '2,368', dims: [{l:'内容质量',v:'4.8',w:'94%'},{l:'设备体验',v:'4.6',w:'90%'},{l:'互动效果',v:'4.7',w:'92%'},{l:'服务态度',v:'4.9',w:'96%'},{l:'性价比',v:'4.4',w:'86%'}] },
+    top5: [
+      { name: '楚王宫遗址', value: '3,420', pct: '100%', gold: true },
+      { name: '古战场', value: '2,680', pct: '78%', gold: true },
+      { name: '编钟乐坊', value: '2,120', pct: '62%', gold: true },
+      { name: '丝绸之路馆', value: '1,640', pct: '48%', gold: false },
+      { name: '漆器工坊', value: '1,200', pct: '35%', gold: false }
+    ],
+    feature: [
+      { value: 680, name: '时空穿越', color: '#DFA52B' },
+      { value: 520, name: 'AI讲解', color: '#6c5ce7' },
+      { value: 380, name: '实景导航', color: '#3498db' },
+      { value: 180, name: 'AR合影', color: '#2ecc71' },
+      { value: 86, name: '语音互动', color: '#e17055' }
+    ],
+    device: [
+      { value: 186, name: '使用中', color: '#DFA52B' },
+      { value: 42, name: '空闲', color: '#2ecc71' },
+      { value: 18, name: '充电中', color: '#3498db' },
+      { value: 8, name: '异常', color: '#e74c3c' }
+    ],
+    heatDots: [
+      { w:80,h:80,bg:'rgba(231,76,60,0.6)',top:30,left:60 },
+      { w:60,h:60,bg:'rgba(243,156,18,0.6)',top:70,left:180 },
+      { w:70,h:70,bg:'rgba(231,76,60,0.5)',top:50,left:280 },
+      { w:50,h:50,bg:'rgba(46,204,113,0.5)',top:120,left:120 },
+      { w:55,h:55,bg:'rgba(243,156,18,0.5)',top:110,left:240 },
+      { w:40,h:40,bg:'rgba(46,204,113,0.4)',top:140,left:350 }
+    ]
+  },
+  han: {
+    kpi: [
+      { label: '景区客流（今日）', value: '9,724', change: '↑ 6.8%', up: true, iconBg: 'rgba(223,165,43,0.1)', iconColor: '#DFA52B', icon: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>' },
+      { label: 'AR体验人数（今日）', value: '2,315', change: '↑ 14.2%', up: true, iconBg: 'rgba(108,92,231,0.1)', iconColor: '#6c5ce7', icon: '<rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="12" cy="12" r="3"/>' },
+      { label: '体验转化率（今日）', value: '23.8%', change: '↑ 5.6%', up: true, iconBg: 'rgba(46,204,113,0.1)', iconColor: '#2ecc71', icon: '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>' },
+      { label: '平均体验时长（今日）', value: '52 min', change: '↑ 8.1%', up: true, iconBg: 'rgba(52,152,219,0.1)', iconColor: '#3498db', icon: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>' },
+      { label: '今日体验收入', value: '¥95,680', change: '↑ 22.3%', up: true, iconBg: 'rgba(223,165,43,0.1)', iconColor: '#DFA52B', icon: '<path d="M12 1v22M7 5h10M7 9h10M8 17h8"/>' },
+      { label: '设备在线率', value: '98%', change: '↑ 2.0%', up: true, iconBg: 'rgba(46,204,113,0.1)', iconColor: '#2ecc71', icon: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>' }
+    ],
+    themeCard: { badge: '运行中', name: '大汉风华 · 汉韵主题包', sub: 'v1.3.7 · 更新于 1 天前', symbol: '玺', tags: ['汉服变装','宫廷宴饮','丝路商旅','诗词互动'], statusColor: '#2ecc71', version: 'v1.3.7' },
+    funnel: [
+      { label: '进入景区', value: '9,724', rate: '100%', width: '100%' },
+      { label: '领取设备', value: '5,120', rate: '52.7%', width: '85%' },
+      { label: '开启体验', value: '3,860', rate: '39.7%', width: '65%' },
+      { label: '触发互动', value: '2,940', rate: '30.2%', width: '50%' },
+      { label: '完成体验', value: '2,315', rate: '23.8%', width: '38%' }
+    ],
+    satisfaction: { score: '4.8', total: '1,856', dims: [{l:'内容质量',v:'4.9',w:'96%'},{l:'设备体验',v:'4.7',w:'92%'},{l:'互动效果',v:'4.8',w:'94%'},{l:'服务态度',v:'4.8',w:'94%'},{l:'性价比',v:'4.6',w:'90%'}] },
+    top5: [
+      { name: '未央宫殿', value: '2,860', pct: '100%', gold: true },
+      { name: '丝路驼铃', value: '2,340', pct: '82%', gold: true },
+      { name: '长乐歌舞', value: '1,980', pct: '69%', gold: true },
+      { name: '汉画石刻', value: '1,520', pct: '53%', gold: false },
+      { name: '铜雀春深', value: '1,024', pct: '36%', gold: false }
+    ],
+    feature: [
+      { value: 820, name: '汉服变装', color: '#DFA52B' },
+      { value: 640, name: '宫廷宴饮', color: '#6c5ce7' },
+      { value: 450, name: '丝路商旅', color: '#3498db' },
+      { value: 280, name: '诗词互动', color: '#2ecc71' },
+      { value: 125, name: 'AR合影', color: '#e17055' }
+    ],
+    device: [
+      { value: 210, name: '使用中', color: '#DFA52B' },
+      { value: 28, name: '空闲', color: '#2ecc71' },
+      { value: 8, name: '充电中', color: '#3498db' },
+      { value: 4, name: '异常', color: '#e74c3c' }
+    ],
+    heatDots: [
+      { w:90,h:90,bg:'rgba(231,76,60,0.6)',top:20,left:100 },
+      { w:65,h:65,bg:'rgba(243,156,18,0.6)',top:80,left:240 },
+      { w:55,h:55,bg:'rgba(231,76,60,0.5)',top:40,left:320 },
+      { w:70,h:70,bg:'rgba(46,204,113,0.5)',top:110,left:60 },
+      { w:45,h:45,bg:'rgba(243,156,18,0.5)',top:130,left:300 },
+      { w:50,h:50,bg:'rgba(46,204,113,0.4)',top:100,left:180 }
+    ]
+  }
+};
+
+// Chart data per theme
+var chartDataSets = {
+  chu: chartData,
+  han: {
+    flow: {
+      today: {
+        labels: ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'],
+        main: [210,380,720,1180,1520,1780,1420,1260,1480,1680,1550,1280,1050,780,520],
+        compare: [190,320,610,1020,1350,1580,1280,1120,1320,1500,1380,1150,920,680,450]
+      },
+      week: {
+        labels: ['周一','周二','周三','周四','周五','周六','周日'],
+        main: [6800,7500,7200,8600,9100,9724,9200],
+        compare: [6200,6800,6500,7800,8200,8900,8400]
+      },
+      month: {
+        labels: ['1日','3日','5日','7日','9日','11日','13日','15日','17日','19日','21日','23日','25日','27日','29日','31日'],
+        main: [7500,8100,7200,9200,9800,8600,7800,9724,8900,8400,10200,9800,9100,8600,9400,8800],
+        compare: [6800,7400,6500,8300,8900,7800,7100,8800,8100,7600,9300,8900,8200,7800,8500,8000]
+      }
+    },
+    ar: {
+      today: {
+        labels: ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'],
+        main: [30,65,180,320,420,480,380,295,385,450,395,320,260,185,95],
+        compare: [22,48,140,260,340,390,310,245,320,370,330,265,215,150,72]
+      },
+      week: {
+        labels: ['周一','周二','周三','周四','周五','周六','周日'],
+        main: [1650,1820,1540,2020,2180,2315,2150],
+        compare: [1420,1580,1350,1780,1920,2050,1900]
+      },
+      month: {
+        labels: ['1日','3日','5日','7日','9日','11日','13日','15日','17日','19日','21日','23日','25日','27日','29日','31日'],
+        main: [1800,1950,1620,2100,2280,1850,1680,2315,2020,1920,2350,2200,1980,1820,2150,2050],
+        compare: [1550,1680,1400,1820,1960,1600,1450,2000,1740,1660,2030,1900,1710,1570,1860,1770]
+      }
+    }
+  }
+};
+
+var currentTheme = 'chu';
+
+// Analysis page data per theme
+var analysisData = {
+  chu: {
+    kpi: [
+      { label: '今日客流', value: '12,856', change: '↑ 12.3%', up: true },
+      { label: '本周客流', value: '86,421', change: '↑ 8.5%', up: true },
+      { label: '本月客流', value: '326,819', change: '↑ 6.2%', up: true },
+      { label: '年累计客流', value: '2,415,687', change: '↑ 18.7%', up: true }
+    ],
+    flow: {
+      today: [320,860,1820,1680,1750,1860,1280,650],
+      yesterday: [280,750,1650,1580,1600,1720,1200,600],
+      lastWeek: [250,680,1480,1420,1520,1580,1100,520]
+    },
+    source: [
+      { value: 5640, name: '线上预约', color: '#DFA52B' },
+      { value: 3280, name: '团队游客', color: '#6c5ce7' },
+      { value: 2500, name: '散客', color: '#3498db' },
+      { value: 1436, name: '其他', color: '#2ecc71' }
+    ],
+    sourceTotal: '12,856',
+    bar: [320,480,860,1450,1820,2100,1680,1420,1750,2050,1860,1520,1280,980,650],
+    table: [
+      ['2026-08-15','12,856','11,420','3,280','5,640','2,500','+1,420 ↑',true],
+      ['2026-08-14','11,436','10,180','2,950','4,980','2,250','+680 ↑',true],
+      ['2026-08-13','10,756','9,620','2,780','4,560','2,280','-320 ↓',false],
+      ['2026-08-12','11,076','9,840','3,120','4,820','1,900','+1,256 ↑',true],
+      ['2026-08-11','9,820','8,760','2,640','4,120','2,000','-580 ↓',false]
+    ]
+  },
+  han: {
+    kpi: [
+      { label: '今日客流', value: '9,724', change: '↑ 6.8%', up: true },
+      { label: '本周客流', value: '62,580', change: '↑ 11.2%', up: true },
+      { label: '本月客流', value: '248,360', change: '↑ 9.5%', up: true },
+      { label: '年累计客流', value: '1,856,420', change: '↑ 22.1%', up: true }
+    ],
+    flow: {
+      today: [210,720,1520,1420,1480,1550,1050,520],
+      yesterday: [190,610,1350,1280,1320,1380,920,450],
+      lastWeek: [170,560,1280,1180,1250,1300,880,420]
+    },
+    source: [
+      { value: 4120, name: '线上预约', color: '#DFA52B' },
+      { value: 2860, name: '团队游客', color: '#6c5ce7' },
+      { value: 1820, name: '散客', color: '#3498db' },
+      { value: 924, name: '其他', color: '#2ecc71' }
+    ],
+    sourceTotal: '9,724',
+    bar: [210,380,720,1180,1520,1780,1420,1260,1480,1680,1550,1280,1050,780,520],
+    table: [
+      ['2026-08-15','9,724','8,650','2,860','4,120','1,670','+820 ↑',true],
+      ['2026-08-14','8,904','7,920','2,580','3,780','1,560','+456 ↑',true],
+      ['2026-08-13','8,448','7,520','2,420','3,560','1,540','-280 ↓',false],
+      ['2026-08-12','8,728','7,760','2,680','3,680','1,400','+680 ↑',true],
+      ['2026-08-11','8,048','7,160','2,320','3,420','1,420','-520 ↓',false]
+    ]
+  }
+};
+
+function switchTheme(theme) {
+  currentTheme = theme;
+  var d = themeDataSets[theme];
+
+  // Update chart data and redraw line charts
+  chartData = chartDataSets[theme];
+  // Reset tabs to "today"
+  document.querySelectorAll('.chart-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.chart-tab[data-period="today"]').forEach(function(t) { t.classList.add('active'); });
+  // Force redraw
+  var flowCanvas = document.getElementById('flowChart');
+  var arCanvas = document.getElementById('arChart');
+  flowCanvas.getContext('2d').clearRect(0, 0, flowCanvas.width, flowCanvas.height);
+  arCanvas.getContext('2d').clearRect(0, 0, arCanvas.width, arCanvas.height);
+  drawChart('flowChart', 'flow', 'today');
+  drawChart('arChart', 'ar', 'today');
+
+  // KPI cards
+  var kpiRow = document.getElementById('kpiRow');
+  kpiRow.innerHTML = d.kpi.map(function(k) {
+    return '<div class="kpi-card"><div class="kpi-label">' + k.label + '</div><div class="kpi-value">' + k.value + '</div><div class="kpi-footer"><span class="kpi-change ' + (k.up ? 'up' : 'down') + '">' + k.change + '</span><div class="kpi-icon" style="background:' + k.iconBg + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + k.iconColor + '" stroke-width="1.5">' + k.icon + '</svg></div></div></div>';
+  }).join('');
+
+  // Theme card
+  var tc = d.themeCard;
+  var themeImages = { chu: 'y_my06uz0wnhkh7g4iwsbfghyy7zfpttlz4h6vf1f8-9m-w2400-h1792.png', han: 'vmvxcfa3dklfn9t7z34tcsqjmokokdo49qjgyvvgm-8m-w2400-h1792.png' };
+  document.getElementById('themeCard').innerHTML = '<div class="theme-card-bg" style="background-image:url(\'' + themeImages[theme] + '\')"></div><div class="theme-badge">' + tc.badge + '</div><div class="theme-name">' + tc.name + '</div><div class="theme-sub">' + tc.sub + '</div><div class="theme-meta"><div class="theme-meta-item">状态 <span style="color:' + tc.statusColor + '">运行中</span></div><div class="theme-meta-item">版本 <span style="color:#DFA52B">' + tc.version + '</span></div></div><div class="theme-tags">' + tc.tags.map(function(t) { return '<span class="theme-tag">' + t + '</span>'; }).join('') + '</div>';
+
+  // Heatmap
+  var heatmapImages = { chu: '196c8340-1de2-4cda-b4da-dcfd457c9b55-1.png', han: '4109a097-704d-4d8a-a164-c270cce86a84.png' };
+  var hc = document.getElementById('heatmapContainer');
+  hc.innerHTML = '<img src="' + heatmapImages[theme] + '" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">';
+
+  // Feature chart
+  chartFeature.setOption({
+    series: [{ data: d.feature.map(function(f) { return { value: f.value, name: f.name, itemStyle: { color: f.color } }; }) }]
+  });
+
+  // Device chart
+  chartDevice.setOption({
+    series: [{ data: d.device.map(function(f) { return { value: f.value, name: f.name, itemStyle: { color: f.color } }; }) }]
+  });
+
+  // Funnel
+  document.getElementById('funnelList').innerHTML = d.funnel.map(function(f) {
+    return '<div class="funnel-item"><span class="funnel-label">' + f.label + '</span><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:' + f.width + '"><div class="funnel-bar-fill" style="width:' + f.width + '"></div><span class="funnel-value">' + f.value + '</span><span class="funnel-rate">' + f.rate + '</span></div></div></div>';
+  }).join('');
+
+  // Satisfaction
+  var s = d.satisfaction;
+  document.getElementById('satisfactionContent').innerHTML = '<div class="satisfaction-score"><div class="satisfaction-number">' + s.score + '</div><div class="satisfaction-stars">★★★★★</div><div class="satisfaction-total">基于 ' + s.total + ' 条评价</div></div><div class="satisfaction-dims">' + s.dims.map(function(dim) { return '<div class="dim-item"><span class="dim-label">' + dim.l + '</span><div class="dim-bar"><div class="dim-bar-fill" style="width:' + dim.w + '"></div></div><span class="dim-value">' + dim.v + '</span></div>'; }).join('') + '</div>';
+
+  // Top5
+  document.getElementById('top5List').innerHTML = d.top5.map(function(item, i) {
+    var rankClass = item.gold ? 'gold' : 'silver';
+    var barBg = item.gold ? 'linear-gradient(90deg,#DFA52B,#f0c75e)' : '#ccc';
+    return '<div class="top5-item"><div class="top5-rank ' + rankClass + '">' + (i+1) + '</div><span class="top5-name">' + item.name + '</span><div class="top5-bar-wrap"><div class="top5-bar"><div class="top5-bar-fill" style="width:' + item.pct + ';background:' + barBg + '"></div></div></div><span class="top5-value">' + item.value + '</span></div>';
+  }).join('');
+
+  // Update analysis page
+  updateAnalysisPage(theme);
+  // Update device page
+  updateDevicePage(theme);
+  // Update experience page
+  updateExpPage(theme);
+  // Update AI page
+  updateAiPage(theme);
+}
+
+function updateAnalysisPage(theme) {
+  var ad = analysisData[theme];
+  var iconConfigs = [
+    { bg: 'rgba(223,165,43,0.1)', color: '#DFA52B', icon: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>' },
+    { bg: 'rgba(108,92,231,0.1)', color: '#6c5ce7', icon: '<path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/>' },
+    { bg: 'rgba(46,204,113,0.1)', color: '#2ecc71', icon: '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>' },
+    { bg: 'rgba(52,152,219,0.1)', color: '#3498db', icon: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>' }
+  ];
+
+  // KPI
+  var akr = document.getElementById('analysisKpiRow');
+  akr.innerHTML = ad.kpi.map(function(k, i) {
+    var ic = iconConfigs[i];
+    return '<div class="kpi-card"><div class="kpi-label">' + k.label + '</div><div class="kpi-value">' + k.value + '</div><div class="kpi-footer"><span class="kpi-change ' + (k.up ? 'up' : 'down') + '">' + k.change + '</span><div class="kpi-icon" style="background:' + ic.bg + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="' + ic.color + '" stroke-width="1.5">' + ic.icon + '</svg></div></div></div>';
+  }).join('');
+
+  // Table
+  var tbody = document.getElementById('analysisTableBody');
+  tbody.innerHTML = ad.table.map(function(row) {
+    return '<tr><td>' + row[0] + '</td><td>' + row[1] + '</td><td>' + row[2] + '</td><td>' + row[3] + '</td><td>' + row[4] + '</td><td>' + row[5] + '</td><td class="' + (row[7] ? 'change-up' : 'change-down') + '">' + row[6] + '</td></tr>';
+  }).join('');
+
+  // Charts (only if inited)
+  if (!analysisChartsInited) return;
+
+  analysisFlowChart.setOption({
+    series: [
+      { data: ad.flow.today },
+      { data: ad.flow.yesterday },
+      { data: ad.flow.lastWeek }
+    ]
+  });
+
+  analysisSourceChart.setOption({
+    series: [{
+      label: { formatter: '{a|' + ad.sourceTotal + '}\n{b|总客流}', rich: { a: { fontSize: 18, fontWeight: 700, color: '#1a1a1a', lineHeight: 24 }, b: { fontSize: 10, color: '#999', lineHeight: 16 } } },
+      data: ad.source.map(function(s) { return { value: s.value, name: s.name, itemStyle: { color: s.color } }; })
+    }]
+  });
+
+  analysisBarChart.setOption({
+    series: [{ data: ad.bar }]
+  });
+}
+
+// Page switching
+var analysisChartsInited = false;
+var deviceChartsInited = false;
+var expChartsInited = false;
+var aiChartsInited = false;
+function switchPage(page, el) {
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  el.classList.add('active');
+  document.querySelectorAll('.page-content').forEach(function(p) { p.style.display = 'none'; });
+  document.getElementById('page-' + page).style.display = '';
+  if (page === 'analysis' && !analysisChartsInited) {
+    initAnalysisCharts();
+    analysisChartsInited = true;
+  }
+  if (page === 'analysis') {
+    setTimeout(function() {
+      analysisFlowChart.resize();
+      analysisSourceChart.resize();
+      analysisBarChart.resize();
+    }, 50);
+  }
+  if (page === 'device' && !deviceChartsInited) {
+    initDeviceCharts();
+    deviceChartsInited = true;
+  }
+  if (page === 'device') {
+    setTimeout(function() {
+      deviceOnlineChart.resize();
+      deviceBatteryChart.resize();
+      deviceUsageChart.resize();
+    }, 50);
+  }
+  if (page === 'experience' && !expChartsInited) {
+    initExpCharts();
+    expChartsInited = true;
+  }
+  if (page === 'experience') {
+    setTimeout(function() { expTrendChart.resize(); expHeatmapChart.resize(); expDevicePie.resize(); }, 50);
+  }
+  if (page === 'ai' && !aiChartsInited) {
+    initAiCharts();
+    aiChartsInited = true;
+  }
+  if (page === 'ai') {
+    setTimeout(function() { aiTrendChart.resize(); aiStatusChart.resize(); }, 50);
+  }
+}
+
+var analysisFlowChart, analysisSourceChart, analysisBarChart;
+function initAnalysisCharts() {
+  // Flow trend comparison (canvas)
+  var afc = document.getElementById('analysisFlowChart');
+  analysisFlowChart = echarts.init(afc);
+  analysisFlowChart.setOption({
+    grid: { left: 40, right: 16, top: 30, bottom: 28 },
+    legend: { top: 0, right: 0, itemWidth: 12, itemHeight: 2, textStyle: { fontSize: 10, color: '#888' } },
+    tooltip: { trigger: 'axis', backgroundColor: '#fff', borderColor: '#eee', textStyle: { color: '#333', fontSize: 11 } },
+    xAxis: {
+      type: 'category',
+      data: ['06:00','08:00','10:00','12:00','14:00','16:00','18:00','20:00'],
+      axisLine: { lineStyle: { color: '#eee' } },
+      axisLabel: { color: '#999', fontSize: 10 },
+      axisTick: { show: false }
+    },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f5f5f5' } }, axisLabel: { color: '#999', fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+    series: [
+      { name: '今日', data: [320,860,1820,1680,1750,1860,1280,650], type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#DFA52B', width: 2.5 }, areaStyle: { color: { type: 'linear', x:0,y:0,x2:0,y2:1, colorStops: [{offset:0,color:'rgba(223,165,43,0.12)'},{offset:1,color:'rgba(223,165,43,0)'}] } } },
+      { name: '昨日', data: [280,750,1650,1580,1600,1720,1200,600], type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#d0d0d0', width: 1.5 } },
+      { name: '上周同期', data: [250,680,1480,1420,1520,1580,1100,520], type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#3498db', width: 1.5, type: 'dashed' } }
+    ]
+  });
+
+  // Source pie chart
+  var asc = document.getElementById('analysisSourceChart');
+  analysisSourceChart = echarts.init(asc);
+  analysisSourceChart.setOption({
+    tooltip: { trigger: 'item', backgroundColor: '#fff', borderColor: '#eee', textStyle: { color: '#333', fontSize: 11 } },
+    legend: { bottom: 0, itemWidth: 8, itemHeight: 8, textStyle: { fontSize: 10, color: '#666' } },
+    series: [{
+      type: 'pie', radius: ['40%','65%'], center: ['50%','40%'],
+      label: { show: true, position: 'center', formatter: '{a|12,856}\n{b|总客流}', rich: { a: { fontSize: 18, fontWeight: 700, color: '#1a1a1a', lineHeight: 24 }, b: { fontSize: 10, color: '#999', lineHeight: 16 } } },
+      data: [
+        { value: 5640, name: '线上预约', itemStyle: { color: '#DFA52B' } },
+        { value: 3280, name: '团队游客', itemStyle: { color: '#6c5ce7' } },
+        { value: 2500, name: '散客', itemStyle: { color: '#3498db' } },
+        { value: 1436, name: '其他', itemStyle: { color: '#2ecc71' } }
+      ]
+    }]
+  });
+
+  // Hourly bar chart
+  var abc = document.getElementById('analysisBarChart');
+  analysisBarChart = echarts.init(abc);
+  analysisBarChart.setOption({
+    grid: { left: 35, right: 10, top: 10, bottom: 28 },
+    tooltip: { trigger: 'axis', backgroundColor: '#fff', borderColor: '#eee', textStyle: { color: '#333', fontSize: 11 } },
+    xAxis: {
+      type: 'category',
+      data: ['6','7','8','9','10','11','12','13','14','15','16','17','18','19','20'],
+      axisLine: { lineStyle: { color: '#eee' } },
+      axisLabel: { color: '#999', fontSize: 10 },
+      axisTick: { show: false }
+    },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f5f5f5' } }, axisLabel: { color: '#999', fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+    series: [{
+      type: 'bar', barWidth: '50%',
+      data: [320,480,860,1450,1820,2100,1680,1420,1750,2050,1860,1520,1280,980,650],
+      itemStyle: { color: { type: 'linear', x:0,y:0,x2:0,y2:1, colorStops: [{offset:0,color:'#DFA52B'},{offset:1,color:'rgba(223,165,43,0.3)'}] }, borderRadius: [3,3,0,0] }
+    }]
+  });
+
+  window.addEventListener('resize', function() {
+    if (analysisChartsInited) {
+      analysisFlowChart.resize();
+      analysisSourceChart.resize();
+      analysisBarChart.resize();
+    }
+  });
+}
+
+// Device page charts
+var deviceOnlineChart, deviceBatteryChart, deviceUsageChart;
+var devicePageData = {
+  chu: {
+    online: [95,96,94,97,96,95,96],
+    battery: [
+      { value: 120, name: '80%以上', color: '#2ecc71' },
+      { value: 95, name: '50%-80%', color: '#DFA52B' },
+      { value: 55, name: '20%-50%', color: '#f39c12' },
+      { value: 30, name: '20%以下', color: '#e74c3c' }
+    ],
+    usage: [12,18,35,42,55,48,62,58,45,38,28,15],
+    table: [
+      ['PV-0001','using','使用中',78,'5h 32min',12,'14:23','A区 · 楚王宫'],
+      ['PV-0002','idle','空闲',92,'3h 18min',8,'13:50','B区 · 古战场'],
+      ['PV-0003','using','使用中',45,'6h 05min',14,'14:31','A区 · 楚王宫'],
+      ['PV-0004','charging','充电中',32,'4h 42min',10,'12:15','C区 · 编钟乐坊'],
+      ['PV-0005','error','异常',0,'1h 20min',3,'09:47','B区 · 古战场'],
+      ['PV-0006','using','使用中',65,'4h 15min',11,'14:10','A区 · 楚王宫'],
+      ['PV-0007','idle','空闲',88,'2h 50min',6,'12:40','C区 · 编钟乐坊'],
+      ['PV-0008','using','使用中',52,'5h 48min',13,'14:28','B区 · 古战场'],
+      ['PV-0009','charging','充电中',18,'3h 55min',9,'11:30','A区 · 楚王宫'],
+      ['PV-0010','idle','空闲',95,'1h 45min',5,'13:20','C区 · 编钟乐坊']
+    ],
+    kpi: [300,162,108,27,3]
+  },
+  han: {
+    online: [97,98,96,98,97,98,98],
+    battery: [
+      { value: 140, name: '80%以上', color: '#2ecc71' },
+      { value: 80, name: '50%-80%', color: '#DFA52B' },
+      { value: 45, name: '20%-50%', color: '#f39c12' },
+      { value: 15, name: '20%以下', color: '#e74c3c' }
+    ],
+    usage: [8,14,28,38,50,55,68,62,52,42,32,18],
+    table: [
+      ['PV-1001','using','使用中',82,'6h 12min',15,'14:35','D区 · 未央宫'],
+      ['PV-1002','using','使用中',61,'5h 40min',13,'14:20','E区 · 丝路驼铃'],
+      ['PV-1003','idle','空闲',96,'2h 55min',7,'13:15','D区 · 未央宫'],
+      ['PV-1004','idle','空闲',89,'3h 30min',9,'13:45','F区 · 长乐歌舞'],
+      ['PV-1005','using','使用中',38,'6h 50min',16,'14:42','E区 · 丝路驼铃'],
+      ['PV-1006','charging','充电中',22,'4h 20min',11,'11:50','D区 · 未央宫'],
+      ['PV-1007','idle','空闲',91,'2h 10min',5,'12:30','F区 · 长乐歌舞'],
+      ['PV-1008','using','使用中',55,'5h 25min',12,'14:18','E区 · 丝路驼铃'],
+      ['PV-1009','using','使用中',72,'4h 58min',10,'14:05','D区 · 未央宫'],
+      ['PV-1010','error','异常',0,'0h 45min',2,'08:30','F区 · 长乐歌舞']
+    ],
+    kpi: [280,178,82,18,2]
+  }
+};
+
+function initDeviceCharts() {
+  deviceOnlineChart = echarts.init(document.getElementById('deviceOnlineChart'));
+  deviceBatteryChart = echarts.init(document.getElementById('deviceBatteryChart'));
+  deviceUsageChart = echarts.init(document.getElementById('deviceUsageChart'));
+  renderDeviceCharts(currentTheme);
+  window.addEventListener('resize', function() {
+    if (deviceChartsInited) {
+      deviceOnlineChart.resize();
+      deviceBatteryChart.resize();
+      deviceUsageChart.resize();
+    }
+  });
+}
+
+function renderDeviceCharts(theme) {
+  var dd = devicePageData[theme];
+
+  deviceOnlineChart.setOption({
+    grid: { left: 35, right: 10, top: 10, bottom: 28 },
+    tooltip: { trigger: 'axis', backgroundColor: '#fff', borderColor: '#eee', textStyle: { color: '#333', fontSize: 11 }, formatter: '{b}: {c}%' },
+    xAxis: { type: 'category', data: ['周一','周二','周三','周四','周五','周六','周日'], axisLine: { lineStyle: { color: '#eee' } }, axisLabel: { color: '#999', fontSize: 10 }, axisTick: { show: false } },
+    yAxis: { type: 'value', min: 90, max: 100, splitLine: { lineStyle: { color: '#f5f5f5' } }, axisLabel: { color: '#999', fontSize: 10, formatter: '{value}%' }, axisLine: { show: false }, axisTick: { show: false } },
+    series: [{ data: dd.online, type: 'line', smooth: true, symbol: 'circle', symbolSize: 6, lineStyle: { color: '#DFA52B', width: 2.5 }, itemStyle: { color: '#DFA52B' }, areaStyle: { color: { type: 'linear', x:0,y:0,x2:0,y2:1, colorStops: [{offset:0,color:'rgba(223,165,43,0.12)'},{offset:1,color:'rgba(223,165,43,0)'}] } } }]
+  });
+
+  deviceBatteryChart.setOption({
+    tooltip: { trigger: 'item', backgroundColor: '#fff', borderColor: '#eee', textStyle: { color: '#333', fontSize: 11 } },
+    legend: { show: false },
+    series: [{
+      type: 'pie', radius: ['38%','58%'], center: ['50%','42%'],
+      label: { show: true, fontSize: 10, color: '#666', formatter: '{b}\n{c}台' },
+      labelLine: { show: true, length: 6, length2: 10, lineStyle: { color: '#ddd' } },
+      data: dd.battery.map(function(b) { return { value: b.value, name: b.name, itemStyle: { color: b.color } }; })
+    }]
+  });
+
+  deviceUsageChart.setOption({
+    grid: { left: 35, right: 10, top: 10, bottom: 28 },
+    tooltip: { trigger: 'axis', backgroundColor: '#fff', borderColor: '#eee', textStyle: { color: '#333', fontSize: 11 } },
+    xAxis: { type: 'category', data: ['6','7','8','9','10','11','12','13','14','15','16','17'], axisLine: { lineStyle: { color: '#eee' } }, axisLabel: { color: '#999', fontSize: 10 }, axisTick: { show: false } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f5f5f5' } }, axisLabel: { color: '#999', fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+    series: [{ type: 'bar', barWidth: '45%', data: dd.usage, itemStyle: { color: { type: 'linear', x:0,y:0,x2:0,y2:1, colorStops: [{offset:0,color:'#DFA52B'},{offset:1,color:'rgba(223,165,43,0.3)'}] }, borderRadius: [3,3,0,0] } }]
+  });
+}
+
+function updateDevicePage(theme) {
+  var dd = devicePageData[theme];
+  // Update table
+  var tbody = document.getElementById('deviceTableBody');
+  tbody.innerHTML = dd.table.map(function(row) {
+    var batColor = row[3] > 70 ? '#2ecc71' : row[3] > 30 ? '#f39c12' : '#e74c3c';
+    return '<tr><td>' + row[0] + '</td><td><span class="status-tag ' + row[1] + '">' + row[2] + '</span></td><td><div class="battery-bar"><div class="battery-fill" style="width:' + row[3] + '%;background:' + batColor + '"></div></div><span class="battery-text">' + row[3] + '%</span></td><td>' + row[4] + '</td><td>' + row[5] + '</td><td>' + row[6] + '</td><td>' + row[7] + '</td><td><a class="detail-link">查看详情</a></td></tr>';
+  }).join('');
+
+  // Update KPI
+  var kpi = dd.kpi;
+  var total = kpi[0];
+  var pcts = [100, Math.round(kpi[1]/total*100), Math.round(kpi[2]/total*100), Math.round(kpi[3]/total*100), Math.round(kpi[4]/total*100)];
+  var colors = ['#555','#DFA52B','#2ecc71','#3498db','#e74c3c'];
+  var labels = ['全部设备','使用中','空闲','充电中','异常'];
+  var icons = [
+    '<rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1"/>',
+    '<path d="M12 2a8 8 0 0 1 8 8c0 3-2 5.5-4 7l-4 5-4-5c-2-1.5-4-4-4-7a8 8 0 0 1 8-8z"/><circle cx="12" cy="10" r="2"/>',
+    '<circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/>',
+    '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>',
+    '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>'
+  ];
+  var iconBgs = ['rgba(100,100,100,0.08)','rgba(223,165,43,0.1)','rgba(46,204,113,0.1)','rgba(52,152,219,0.1)','rgba(231,76,60,0.1)'];
+  var kpiRow = document.getElementById('deviceKpiRow');
+  kpiRow.innerHTML = kpi.map(function(v, i) {
+    var pctLabel = i === 0 ? '' : ' <span style="color:#999;font-size:10px">' + pcts[i] + '%</span>';
+    return '<div class="device-kpi-card"><div class="device-kpi-icon" style="background:' + iconBgs[i] + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + colors[i] + '" stroke-width="1.5">' + icons[i] + '</svg></div><div class="device-kpi-info"><div class="device-kpi-label">' + labels[i] + pctLabel + '</div><div class="device-kpi-value">' + v + ' <span class="device-kpi-unit">台</span></div><div class="device-kpi-bar"><div class="device-kpi-bar-fill" style="width:' + pcts[i] + '%;background:' + colors[i] + '"></div></div></div></div>';
+  }).join('');
+
+  // Update charts
+  if (deviceChartsInited) {
+    renderDeviceCharts(theme);
+  }
+}
+
+// Experience page
+var expTrendChart, expHeatmapChart, expDevicePie;
+var expPageData = {
+  chu: {
+    kpi: [
+      { label: '今日体验人数', value: '1,846', change: '↑ 8.7%', up: true },
+      { label: '平均体验时长', value: '47 min', change: '↑ 5.2%', up: true },
+      { label: '人均触发次数', value: '7.4 次', change: '↑ 3.1%', up: true },
+      { label: '导航使用占比', value: '46%', change: '↑ 2.8%', up: true },
+      { label: '完整体验率', value: '68%', change: '↓ 1.5%', up: false }
+    ],
+    trend: {
+      travel: [20,35,80,150,220,280,250,210,260,290,260,200,160,120,65],
+      ai: [15,25,60,110,170,210,190,165,200,230,205,160,130,95,50],
+      nav: [10,20,45,85,130,160,140,125,155,175,155,120,95,70,35]
+    },
+    usage: [
+      { name: '时空穿越', value: 680, color: '#DFA52B' },
+      { name: 'AI讲解', value: 520, color: '#6c5ce7' },
+      { name: '实景导航', value: 380, color: '#3498db' },
+      { name: 'AR合影', value: 180, color: '#2ecc71' },
+      { name: '语音互动', value: 86, color: '#e17055' }
+    ],
+    top5: [
+      { name: '时空穿越', value: '2,480 次' },
+      { name: 'AI讲解', value: '1,920 次' },
+      { name: '实景导航', value: '1,540 次' },
+      { name: 'AR合影', value: '860 次' },
+      { name: '语音互动', value: '420 次' }
+    ],
+    devicePie: [
+      { value: 980, name: 'AR眼镜', color: '#DFA52B' },
+      { value: 520, name: '手机端', color: '#6c5ce7' },
+      { value: 346, name: '租赁设备', color: '#3498db' }
+    ],
+    funnel: [
+      { label: '体验开始', value: '1,846', rate: '100%', width: '100%' },
+      { label: '触发功能', value: '1,513', rate: '82%', width: '82%' },
+      { label: '深度使用', value: '1,071', rate: '58%', width: '58%' },
+      { label: '完成体验', value: '1,255', rate: '68%', width: '68%' }
+    ]
+  },
+  han: {
+    kpi: [
+      { label: '今日体验人数', value: '2,315', change: '↑ 14.2%', up: true },
+      { label: '平均体验时长', value: '52 min', change: '↑ 8.1%', up: true },
+      { label: '人均触发次数', value: '8.6 次', change: '↑ 5.4%', up: true },
+      { label: '导航使用占比', value: '52%', change: '↑ 4.3%', up: true },
+      { label: '完整体验率', value: '74%', change: '↑ 3.2%', up: true }
+    ],
+    trend: {
+      travel: [25,45,100,180,260,320,290,250,300,340,300,240,190,140,80],
+      ai: [20,35,75,140,200,250,225,195,240,270,240,190,150,110,60],
+      nav: [15,28,60,110,165,200,180,160,195,220,195,150,120,85,45]
+    },
+    usage: [
+      { name: '汉服变装', value: 820, color: '#DFA52B' },
+      { name: '宫廷宴饮', value: 640, color: '#6c5ce7' },
+      { name: '丝路商旅', value: 450, color: '#3498db' },
+      { name: '诗词互动', value: 280, color: '#2ecc71' },
+      { name: 'AR合影', value: 125, color: '#e17055' }
+    ],
+    top5: [
+      { name: '汉服变装', value: '3,120 次' },
+      { name: '宫廷宴饮', value: '2,460 次' },
+      { name: '丝路商旅', value: '1,850 次' },
+      { name: '诗词互动', value: '1,080 次' },
+      { name: 'AR合影', value: '560 次' }
+    ],
+    devicePie: [
+      { value: 1180, name: 'AR眼镜', color: '#DFA52B' },
+      { value: 720, name: '手机端', color: '#6c5ce7' },
+      { value: 415, name: '租赁设备', color: '#3498db' }
+    ],
+    funnel: [
+      { label: '体验开始', value: '2,315', rate: '100%', width: '100%' },
+      { label: '触发功能', value: '1,990', rate: '86%', width: '86%' },
+      { label: '深度使用', value: '1,528', rate: '66%', width: '66%' },
+      { label: '完成体验', value: '1,713', rate: '74%', width: '74%' }
+    ]
+  }
+};
+
+function initExpCharts() {
+  expTrendChart = echarts.init(document.getElementById('expTrendChart'));
+  expHeatmapChart = echarts.init(document.getElementById('expHeatmapChart'));
+  expDevicePie = echarts.init(document.getElementById('expDevicePie'));
+  renderExpCharts(currentTheme);
+  window.addEventListener('resize', function() {
+    if (expChartsInited) { expTrendChart.resize(); expHeatmapChart.resize(); expDevicePie.resize(); }
+  });
+}
+
+function renderExpCharts(theme) {
+  var ed = expPageData[theme];
+  var labels = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+  var seriesNames = theme === 'chu' ? ['时空穿越','AI讲解','实景导航'] : ['汉服变装','宫廷宴饮','丝路商旅'];
+  expTrendChart.setOption({
+    grid: { left: 35, right: 10, top: 30, bottom: 28 },
+    legend: { top: 0, right: 0, itemWidth: 12, itemHeight: 2, textStyle: { fontSize: 10, color: '#888' } },
+    tooltip: { trigger: 'axis', backgroundColor: '#fff', borderColor: '#eee', textStyle: { color: '#333', fontSize: 11 } },
+    xAxis: { type: 'category', data: labels, axisLine: { lineStyle: { color: '#eee' } }, axisLabel: { color: '#999', fontSize: 10 }, axisTick: { show: false } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f5f5f5' } }, axisLabel: { color: '#999', fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+    series: [
+      { name: seriesNames[0], data: ed.trend.travel, type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#DFA52B', width: 2 } },
+      { name: seriesNames[1], data: ed.trend.ai, type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#6c5ce7', width: 2 } },
+      { name: seriesNames[2], data: ed.trend.nav, type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#3498db', width: 2 } }
+    ]
+  }, true);
+
+  // Heatmap - simulated with bar chart showing usage intensity per hour per function
+  var hours = ['6','7','8','9','10','11','12','13','14','15','16','17','18','19','20'];
+  expHeatmapChart.setOption({
+    grid: { left: 35, right: 10, top: 36, bottom: 28 },
+    legend: { top: 0, right: 0, itemWidth: 10, itemHeight: 10, textStyle: { fontSize: 10, color: '#888' } },
+    tooltip: { trigger: 'axis', backgroundColor: '#fff', borderColor: '#eee', textStyle: { color: '#333', fontSize: 11 } },
+    xAxis: { type: 'category', data: hours, axisLine: { lineStyle: { color: '#eee' } }, axisLabel: { color: '#999', fontSize: 10 }, axisTick: { show: false } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f5f5f5' } }, axisLabel: { color: '#999', fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+    series: [
+      { name: seriesNames[0], type: 'bar', stack: 'total', barWidth: '55%', data: ed.trend.travel, itemStyle: { color: 'rgba(223,165,43,0.7)', borderRadius: 0 } },
+      { name: seriesNames[1], type: 'bar', stack: 'total', data: ed.trend.ai, itemStyle: { color: 'rgba(108,92,231,0.7)' } },
+      { name: seriesNames[2], type: 'bar', stack: 'total', data: ed.trend.nav, itemStyle: { color: 'rgba(52,152,219,0.7)', borderRadius: [3,3,0,0] } }
+    ]
+  }, true);
+
+  // Device pie
+  expDevicePie.setOption({
+    tooltip: { trigger: 'item', backgroundColor: '#fff', borderColor: '#eee', textStyle: { color: '#333', fontSize: 11 } },
+    legend: { bottom: 0, itemWidth: 10, itemHeight: 10, textStyle: { fontSize: 10, color: '#666' } },
+    series: [{
+      type: 'pie', radius: ['35%','58%'], center: ['50%','38%'],
+      label: { show: true, fontSize: 10, color: '#666', formatter: '{b}\n{d}%' },
+      labelLine: { show: true, length: 6, length2: 10, lineStyle: { color: '#ddd' } },
+      data: ed.devicePie.map(function(d) { return { value: d.value, name: d.name, itemStyle: { color: d.color } }; })
+    }]
+  }, true);
+}
+
+function updateExpPage(theme) {
+  var ed = expPageData[theme];
+  var iconConfigs = [
+    { bg: 'rgba(223,165,43,0.1)', color: '#DFA52B', icon: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>' },
+    { bg: 'rgba(52,152,219,0.1)', color: '#3498db', icon: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>' },
+    { bg: 'rgba(108,92,231,0.1)', color: '#6c5ce7', icon: '<path d="M4 4h16v16H4z"/><path d="M4 12h16M12 4v16"/>' },
+    { bg: 'rgba(46,204,113,0.1)', color: '#2ecc71', icon: '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/>' },
+    { bg: 'rgba(231,76,60,0.1)', color: '#e17055', icon: '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>' }
+  ];
+  // KPI
+  document.getElementById('expKpiRow').innerHTML = ed.kpi.map(function(k, i) {
+    var ic = iconConfigs[i];
+    return '<div class="kpi-card"><div class="kpi-label">' + k.label + '</div><div class="kpi-value">' + k.value + '</div><div class="kpi-footer"><span class="kpi-change ' + (k.up ? 'up' : 'down') + '">' + k.change + '</span><div class="kpi-icon" style="background:' + ic.bg + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="' + ic.color + '" stroke-width="1.5">' + ic.icon + '</svg></div></div></div>';
+  }).join('');
+
+  // Usage bars
+  var maxVal = ed.usage[0].value;
+  document.getElementById('expUsageList').innerHTML = ed.usage.map(function(u) {
+    var pct = Math.round(u.value / maxVal * 100);
+    return '<div class="exp-usage-item"><div class="exp-usage-head"><span class="exp-usage-name">' + u.name + '</span><span class="exp-usage-val">' + u.value + ' 人</span></div><div class="exp-usage-bar"><div class="exp-usage-bar-fill" style="width:' + pct + '%;background:' + u.color + '"></div></div></div>';
+  }).join('');
+
+  // Top5
+  document.getElementById('expTop5').innerHTML = ed.top5.map(function(t, i) {
+    var cls = i < 3 ? 'gold' : 'silver';
+    return '<div class="top5-item"><div class="top5-rank ' + cls + '">' + (i+1) + '</div><span class="top5-name">' + t.name + '</span><span class="top5-value" style="margin-left:auto">' + t.value + '</span></div>';
+  }).join('');
+
+  // Funnel
+  document.getElementById('expFunnel').innerHTML = ed.funnel.map(function(f) {
+    return '<div class="funnel-item"><span class="funnel-label">' + f.label + '</span><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:' + f.width + '"><div class="funnel-bar-fill" style="width:' + f.width + '"></div><span class="funnel-value">' + f.value + '</span><span class="funnel-rate">' + f.rate + '</span></div></div></div>';
+  }).join('');
+
+  // Charts
+  if (expChartsInited) renderExpCharts(theme);
+}
+
+// AI Service page
+var aiTrendChart, aiStatusChart;
+var aiPageData = {
+  chu: {
+    kpi: [
+      { label: 'AI服务调用量', value: '24,862', change: '↑ 18.3%', up: true },
+      { label: 'AI服务成功率', value: '99.2%', change: '↑ 0.3%', up: true },
+      { label: 'AI讲解服务人数', value: '1,432', change: '↑ 12.5%', up: true },
+      { label: 'AI平均响应时间', value: '1.8 s', change: '↓ 0.2s', up: true },
+      { label: 'AI服务满意度', value: '4.8 分', change: '↑ 0.1', up: true }
+    ],
+    trend: { explain: [180,350,680,1200,1580,1820,1520,1280,1620,1850,1680,1420,1100,780,420], qa: [120,240,450,780,1050,1260,1080,920,1120,1320,1180,980,760,520,280], nav: [60,120,220,380,520,640,560,480,580,680,620,520,400,280,150] },
+    models: [
+      { name: 'GPT-景区讲解', calls: '12,480', resp: '1.6s', pct: 100 },
+      { name: 'NLP-智能问答', calls: '8,240', resp: '2.1s', pct: 66 },
+      { name: 'CV-实景导航', calls: '4,142', resp: '1.4s', pct: 33 }
+    ],
+    status: { health: '99.2%', normal: 8, high: 1, error: 0 },
+    services: [
+      { name: 'AI讲解', color: '#DFA52B', stats: [['服务人数','1,432 人'],['平均停留','8.2 min'],['满意度','4.9 分'],['完播率','78%']] },
+      { name: '智能问答', color: '#6c5ce7', stats: [['服务次数','8,240 次'],['平均响应','2.1 s'],['满意度','4.7 分'],['解决率','92%']] },
+      { name: '智能导航', color: '#3498db', stats: [['服务次数','4,142 次'],['平均响应','1.4 s'],['采纳率','86%'],['到达率','91%']] }
+    ],
+    table: [
+      ['楚文化讲解引擎','AI讲解','idle','正常','12,480','99.5%','1.6s',62,'14:32'],
+      ['景区智能问答','智能问答','idle','正常','8,240','98.8%','2.1s',78,'14:32'],
+      ['实景AR导航','智能导航','idle','正常','4,142','99.6%','1.4s',45,'14:32'],
+      ['语音交互引擎','语音识别','using','负载高','3,860','97.2%','2.8s',89,'14:30'],
+      ['图像识别服务','CV识别','idle','正常','2,140','99.1%','1.2s',35,'14:32']
+    ]
+  },
+  han: {
+    kpi: [
+      { label: 'AI服务调用量', value: '31,456', change: '↑ 24.6%', up: true },
+      { label: 'AI服务成功率', value: '99.5%', change: '↑ 0.5%', up: true },
+      { label: 'AI讲解服务人数', value: '1,856', change: '↑ 16.8%', up: true },
+      { label: 'AI平均响应时间', value: '1.5 s', change: '↓ 0.3s', up: true },
+      { label: 'AI服务满意度', value: '4.9 分', change: '↑ 0.2', up: true }
+    ],
+    trend: { explain: [220,420,820,1450,1920,2200,1840,1560,1960,2240,2020,1720,1340,940,510], qa: [150,300,560,960,1280,1540,1320,1120,1360,1620,1440,1200,920,640,340], nav: [80,160,290,480,660,820,710,610,740,860,780,660,510,350,190] },
+    models: [
+      { name: 'GPT-汉韵讲解', calls: '15,820', resp: '1.4s', pct: 100 },
+      { name: 'NLP-诗词问答', calls: '10,360', resp: '1.8s', pct: 65 },
+      { name: 'CV-丝路导航', calls: '5,276', resp: '1.2s', pct: 33 }
+    ],
+    status: { health: '99.5%', normal: 9, high: 0, error: 0 },
+    services: [
+      { name: 'AI讲解', color: '#DFA52B', stats: [['服务人数','1,856 人'],['平均停留','9.5 min'],['满意度','4.9 分'],['完播率','82%']] },
+      { name: '智能问答', color: '#6c5ce7', stats: [['服务次数','10,360 次'],['平均响应','1.8 s'],['满意度','4.8 分'],['解决率','95%']] },
+      { name: '智能导航', color: '#3498db', stats: [['服务次数','5,276 次'],['平均响应','1.2 s'],['采纳率','89%'],['到达率','94%']] }
+    ],
+    table: [
+      ['汉韵文化讲解引擎','AI讲解','idle','正常','15,820','99.7%','1.4s',58,'14:32'],
+      ['诗词智能问答','智能问答','idle','正常','10,360','99.2%','1.8s',72,'14:32'],
+      ['丝路AR导航','智能导航','idle','正常','5,276','99.8%','1.2s',40,'14:32'],
+      ['语音交互引擎','语音识别','idle','正常','4,520','98.5%','2.2s',65,'14:31'],
+      ['图像识别服务','CV识别','idle','正常','2,680','99.3%','1.1s',30,'14:32']
+    ]
+  }
+};
+
+function initAiCharts() {
+  aiTrendChart = echarts.init(document.getElementById('aiTrendChart'));
+  aiStatusChart = echarts.init(document.getElementById('aiStatusChart'));
+  renderAiCharts(currentTheme);
+  window.addEventListener('resize', function() {
+    if (aiChartsInited) { aiTrendChart.resize(); aiStatusChart.resize(); }
+  });
+}
+
+function renderAiCharts(theme) {
+  var ad = aiPageData[theme];
+  var labels = ['06','07','08','09','10','11','12','13','14','15','16','17','18','19','20'];
+  aiTrendChart.setOption({
+    grid: { left: 40, right: 10, top: 30, bottom: 28 },
+    legend: { top: 0, right: 0, itemWidth: 12, itemHeight: 2, textStyle: { fontSize: 10, color: '#888' } },
+    tooltip: { trigger: 'axis', backgroundColor: '#fff', borderColor: '#eee', textStyle: { color: '#333', fontSize: 11 } },
+    xAxis: { type: 'category', data: labels, axisLine: { lineStyle: { color: '#eee' } }, axisLabel: { color: '#999', fontSize: 10 }, axisTick: { show: false } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f5f5f5' } }, axisLabel: { color: '#999', fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+    series: [
+      { name: 'AI讲解', data: ad.trend.explain, type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#DFA52B', width: 2 }, areaStyle: { color: { type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(223,165,43,0.1)'},{offset:1,color:'rgba(223,165,43,0)'}] } } },
+      { name: '智能问答', data: ad.trend.qa, type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#6c5ce7', width: 2 } },
+      { name: '智能导航', data: ad.trend.nav, type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#3498db', width: 2 } }
+    ]
+  }, true);
+
+  aiStatusChart.setOption({
+    tooltip: { trigger: 'item', backgroundColor: '#fff', borderColor: '#eee', textStyle: { color: '#333', fontSize: 11 } },
+    legend: { bottom: 0, itemWidth: 8, itemHeight: 8, textStyle: { fontSize: 10, color: '#666' } },
+    series: [{
+      type: 'pie', radius: ['45%','65%'], center: ['50%','38%'],
+      label: { show: true, position: 'center', formatter: '{a|' + ad.status.health + '}\n{b|健康度}', rich: { a: { fontSize: 18, fontWeight: 700, color: '#2ecc71', lineHeight: 24 }, b: { fontSize: 10, color: '#999', lineHeight: 16 } } },
+      data: [
+        { value: ad.status.normal, name: '正常运行 ' + ad.status.normal, itemStyle: { color: '#2ecc71' } },
+        { value: ad.status.high, name: '负载较高 ' + ad.status.high, itemStyle: { color: '#f39c12' } },
+        { value: ad.status.error, name: '异常 ' + ad.status.error, itemStyle: { color: '#e74c3c' } }
+      ]
+    }]
+  }, true);
+}
+
+function updateAiPage(theme) {
+  var ad = aiPageData[theme];
+  var iconConfigs = [
+    { bg:'rgba(223,165,43,0.1)',color:'#DFA52B',icon:'<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>' },
+    { bg:'rgba(46,204,113,0.1)',color:'#2ecc71',icon:'<circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/>' },
+    { bg:'rgba(108,92,231,0.1)',color:'#6c5ce7',icon:'<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>' },
+    { bg:'rgba(52,152,219,0.1)',color:'#3498db',icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>' },
+    { bg:'rgba(243,156,18,0.1)',color:'#f39c12',icon:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' }
+  ];
+  document.getElementById('aiKpiRow').innerHTML = ad.kpi.map(function(k,i) {
+    var ic = iconConfigs[i];
+    return '<div class="kpi-card"><div class="kpi-label">'+k.label+'</div><div class="kpi-value">'+k.value+'</div><div class="kpi-footer"><span class="kpi-change '+(k.up?'up':'down')+'">'+k.change+'</span><div class="kpi-icon" style="background:'+ic.bg+'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="'+ic.color+'" stroke-width="1.5">'+ic.icon+'</svg></div></div></div>';
+  }).join('');
+
+  // Models
+  var colors = ['#DFA52B','#6c5ce7','#3498db'];
+  document.getElementById('aiModelList').innerHTML = ad.models.map(function(m,i) {
+    return '<div class="exp-usage-item"><div class="exp-usage-head"><span class="exp-usage-name">'+m.name+'</span><span class="exp-usage-val">'+m.calls+' · '+m.resp+'</span></div><div class="exp-usage-bar"><div class="exp-usage-bar-fill" style="width:'+m.pct+'%;background:'+colors[i]+'"></div></div></div>';
+  }).join('');
+
+  // Service cards
+  document.getElementById('aiServiceCards').innerHTML = ad.services.map(function(s) {
+    return '<div class="card"><div class="card-title" style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:'+s.color+';display:inline-block"></span> '+s.name+'</div><div class="ai-service-stats">'+s.stats.map(function(st) { return '<div class="ai-stat-row"><span class="ai-stat-label">'+st[0]+'</span><span class="ai-stat-value">'+st[1]+'</span></div>'; }).join('')+'</div></div>';
+  }).join('');
+
+  // Table
+  document.getElementById('aiTableBody').innerHTML = ad.table.map(function(r) {
+    var loadColor = r[7] > 80 ? '#e74c3c' : r[7] > 60 ? '#f39c12' : '#2ecc71';
+    return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td><span class="status-tag '+r[2]+'">'+r[3]+'</span></td><td>'+r[4]+'</td><td>'+r[5]+'</td><td>'+r[6]+'</td><td><div class="battery-bar"><div class="battery-fill" style="width:'+r[7]+'%;background:'+loadColor+'"></div></div><span class="battery-text">'+r[7]+'%</span></td><td>'+r[8]+'</td><td><a class="detail-link">查看详情</a></td></tr>';
+  }).join('');
+
+  if (aiChartsInited) renderAiCharts(theme);
+}
+</script>
+</body>
+</html>

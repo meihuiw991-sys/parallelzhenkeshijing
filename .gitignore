@@ -1,0 +1,7 @@
+.DS_Store
+Parallel-core/.env
+Parallel-core/.venv/
+Parallel-core/**/__pycache__/
+Parallel-core/.pytest_cache/
+Parallel-core/*.wav
+*.py[cod]
