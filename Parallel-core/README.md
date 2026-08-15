@@ -22,6 +22,7 @@ Pro/Parallel-core
 - JoyAI Voice 使用 `tts_text` 将 Interaction 结果转换为 PCM16/24kHz 音频并在浏览器播放。
 - Interaction 第一次返回 `</silence>` 时会使用明确视觉指令自动重试一次。
 - 前端会清理模型文本中的 Markdown `**` 标记。
+- 历史弹窗保存并展示当前浏览器最近 50 轮真实问答，支持清空记录。
 - 预留其他按钮和后续交互功能的扩展位置。
 
 ## 模型分工
@@ -178,6 +179,18 @@ VOICE_TIMEOUT_SECONDS=30
 系统会取消 Talker 自动回复，显示固定文案并通过 JoyAI Voice 朗读。
 
 除以上两个精确问句外，其他输入继续调用真实模型。详细规则见 [`DOCS/07-演示Mock说明.md`](DOCS/07-演示Mock说明.md)。
+
+## 历史对话
+
+历史记录完全由前端实现，存储 Key：
+
+```text
+parallelverse.conversationHistory.v1
+```
+
+每轮在收到用户完整 ASR 文本后开始记录，在助手文字回复完成时写入 `localStorage`。记录包含用户文本、助手文本、完成时间和回答来源，最多保留最近 50 轮。
+
+历史记录只保存在当前浏览器，不会写入后端，也不会保存音频、视频或图片。
 
 ## 主要接口
 

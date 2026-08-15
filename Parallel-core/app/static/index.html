@@ -422,6 +422,18 @@
     transition: color 0.2s;
   }
   .history-modal-close:hover { color: #fff; }
+  .history-clear {
+    position: absolute;
+    top: 15px;
+    left: 18px;
+    border: 0;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 2px 4px;
+  }
+  .history-clear:hover { color: #FBD997; }
   .history-modal-body {
     flex: 1;
     overflow-y: auto;
@@ -448,6 +460,13 @@
     color: rgba(255,255,255,0.8);
     font-size: 12px;
     line-height: 1.7;
+    white-space: pre-wrap;
+  }
+  .history-empty {
+    color: rgba(255,255,255,0.5);
+    font-size: 12px;
+    text-align: center;
+    padding: 48px 12px;
   }
 
   /* ===== Bottom Bar: Voice/Navigation ===== */
@@ -1120,20 +1139,10 @@
     <!-- History Modal -->
     <div class="history-modal-overlay" id="historyOverlay">
       <div class="history-modal" id="historyModal">
+        <button class="history-clear" id="historyClear" type="button">清空记录</button>
         <span class="history-modal-close" id="historyClose">✕</span>
         <div class="history-modal-title">历史对话</div>
-        <div class="history-modal-body">
-          <div class="history-section">
-            <div class="history-section-title">霸王鼎</div>
-            <div class="history-section-sub">西楚时期·公元前206年</div>
-            <div class="history-section-text">项王故里的霸王鼎矗立于景区核心广场，是纪念西楚霸王项羽的标志性青铜重器。鼎高2.6米，直径1.9米，重达8吨，体量在国内同类青铜鼎中极为罕见。鼎身采用三足两耳的圆鼎造型，古朴雄浑，表面浮雕以饕餮纹和云雷纹为主，融合了战国晚期至秦汉的楚地风格，既显王权威严，又透出南方的浪漫气息。<br>鼎在古代本为祭祀与烹煮之器，后演变为政权和社稷的象征。此鼎专为项羽而铸，铭刻着他短暂而传奇的一生：公元前207年，他在巨鹿之战中破釜沉舟，大败秦军主力，一战成名；公元前206年，他率军入关，分封天下，自立为"西楚霸王"，达到人生巅峰；公元前202年，兵败垓下，自刎乌江，年仅三十一岁。鼎身背面镌刻的铭文，正是对这十余年风云际会的凝练记述。<br>驻足鼎前，青铜的厚重与凉意仿佛将时光凝固。这尊鼎不仅是实物景观，更是一座精神丰碑——它承载的不仅是项羽"力拔山兮"的勇武，更是那份宁折不弯、虽败犹荣的英雄气节，至今仍在项王故里激荡回响。</div>
-          </div>
-          <div class="history-section">
-            <div class="history-section-title">英风阁</div>
-            <div class="history-section-sub">康熙四十年立碑纪念</div>
-            <div class="history-section-text">项王故里中，继霸王鼎之后最核心的纪念建筑，当属英风阁。它位于景区中轴线的显要位置，是专门供奉与缅怀项羽的主殿。<br>阁名"英风"二字，取"英风千古"之意，颂扬项羽盖世的勇武与气节。建筑为仿汉式风格，面阔五间，重檐歇山顶，青砖黛瓦，线条刚劲而不事繁复雕琢，整体风貌古朴雄浑，恰与霸王刚直不阿的性格相得益彰。<br>步入阁内，迎面便是高达3米有余的项羽石雕坐像，只见他身着战袍，手按长剑，目光深邃如炬，将"力拔山兮气盖世"的英雄气魄凝固于坚石之中。四周墙壁上，镶嵌着大型浮雕壁画，以时间为轴线串联起项羽波澜壮阔的一生——公元前207年破釜沉舟的巨鹿之战、公元前206年暗藏杀机的鸿门宴，以及公元前202年四面楚歌的垓下之围与霸王别姬。这组浮雕如同一部无声的史书，将项羽从起兵称霸到自刎乌江的31年短暂生涯凝练于方寸之间。<br>阁前廊柱悬有多副楹联，汇聚了历代名家对这位悲剧英雄的褒贬评说。整座英风阁，不仅是一座纪念武将的殿堂，更是一个让人沉思历史、感受英雄气节与命运无常的精神空间。</div>
-          </div>
-        </div>
+        <div class="history-modal-body" id="historyBody"></div>
       </div>
     </div>
 
@@ -1605,6 +1614,7 @@
   const historyClose = document.getElementById('historyClose');
 
   historyBtn.addEventListener('click', () => {
+    window.ParallelVerse?.history?.render();
     historyOverlay.classList.toggle('show');
   });
   historyClose.addEventListener('click', () => {
@@ -1697,7 +1707,7 @@
   });
 </script>
 <script src="/static/camera-render.js?v=20260815-2" defer></script>
-<script src="/static/assistant.js?v=20260815-10" defer></script>
+<script src="/static/assistant.js?v=20260815-11" defer></script>
 
 </body>
 </html>

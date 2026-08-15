@@ -6,6 +6,11 @@ const assistantDetail = document.getElementById("dingDetail");
 const assistantDetailTitle = assistantDetail.querySelector(".ding-detail-title");
 const assistantDetailSub = assistantDetail.querySelector(".ding-detail-sub");
 const assistantDetailBody = document.getElementById("dingDetailBody");
+const historyBody = document.getElementById("historyBody");
+const historyClear = document.getElementById("historyClear");
+
+const HISTORY_STORAGE_KEY = "parallelverse.conversationHistory.v1";
+const HISTORY_LIMIT = 50;
 
 let assistantSocket = null;
 let microphoneStream = null;
@@ -24,6 +29,7 @@ let capturedAudioChunks = 0;
 let sentVisionFrames = 0;
 let assistantInitializing = false;
 let assistantInitializationError = null;
+let currentHistoryTurn = null;
 
 function voiceLog(message, details) {
   if (details === undefined) {
@@ -43,6 +49,12 @@ window.ParallelVerse.voice = {
   start: initializeAssistant,
   stop: stopAssistant,
 };
+window.ParallelVerse.history = {
+  render: renderConversationHistory,
+  clear: clearConversationHistory,
+};
+
+historyClear?.addEventListener("click", clearConversationHistory);
 
 initializeAssistant();
 window.addEventListener("beforeunload", stopAssistant);
@@ -191,18 +203,25 @@ function handleAssistantMessage(event) {
       break;
     case "user_transcript_completed":
       userTranscript = message.transcript || userTranscript;
+      beginHistoryTurn(userTranscript);
       updateDialogue();
       break;
     case "assistant_text_delta":
       assistantTranscript += message.delta || "";
+      updateHistoryAssistantText(assistantTranscript);
       updateDialogue();
       break;
     case "assistant_text_replace":
       assistantTranscript = message.text || "";
+      updateHistoryAssistantText(assistantTranscript);
       updateDialogue();
       break;
     case "assistant_text_done":
+      finalizeHistoryTurn();
+      setAssistantStatus("ready", "可以继续对话");
+      break;
     case "assistant_response_done":
+      finalizeHistoryTurn();
       setAssistantStatus("ready", "可以继续对话");
       break;
     case "assistant_audio_delta":
@@ -213,6 +232,7 @@ function handleAssistantMessage(event) {
       updateVisionCard(message);
       break;
     case "assistant_route":
+      updateHistoryRoute(message.route, message.reason);
       if (message.route === "interaction") setAssistantStatus("ready", "正在理解当前画面…");
       break;
     case "assistant_error":
@@ -267,6 +287,117 @@ function updateDialogue() {
 
 function stripMarkdownBold(text) {
   return String(text || "").replaceAll("**", "");
+}
+
+function beginHistoryTurn(text) {
+  const normalized = stripMarkdownBold(text).trim();
+  if (!normalized) return;
+  currentHistoryTurn = {
+    id: `turn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    startedAt: new Date().toISOString(),
+    userText: normalized,
+    assistantText: "",
+    route: "talker",
+    reason: "",
+  };
+}
+
+function updateHistoryRoute(route, reason) {
+  if (!currentHistoryTurn) return;
+  currentHistoryTurn.route = route || "talker";
+  currentHistoryTurn.reason = reason || "";
+}
+
+function updateHistoryAssistantText(text) {
+  if (!currentHistoryTurn) return;
+  currentHistoryTurn.assistantText = stripMarkdownBold(text).trim();
+}
+
+function finalizeHistoryTurn() {
+  if (!currentHistoryTurn) return;
+  const turn = currentHistoryTurn;
+  currentHistoryTurn = null;
+  turn.assistantText = stripMarkdownBold(turn.assistantText || assistantTranscript).trim();
+  if (!turn.userText || !turn.assistantText) return;
+  turn.completedAt = new Date().toISOString();
+  const history = loadConversationHistory();
+  history.unshift(turn);
+  saveConversationHistory(history.slice(0, HISTORY_LIMIT));
+  renderConversationHistory();
+}
+
+function loadConversationHistory() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    voiceError("读取历史对话失败", error);
+    return [];
+  }
+}
+
+function saveConversationHistory(history) {
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+  } catch (error) {
+    voiceError("保存历史对话失败", error);
+  }
+}
+
+function renderConversationHistory() {
+  if (!historyBody) return;
+  historyBody.replaceChildren();
+  const history = loadConversationHistory();
+  if (!history.length) {
+    const empty = document.createElement("div");
+    empty.className = "history-empty";
+    empty.textContent = "暂无历史对话";
+    historyBody.append(empty);
+    return;
+  }
+  for (const turn of history) {
+    const section = document.createElement("div");
+    section.className = "history-section";
+    const title = document.createElement("div");
+    title.className = "history-section-title";
+    title.textContent = `你：${stripMarkdownBold(turn.userText)}`;
+    const sub = document.createElement("div");
+    sub.className = "history-section-sub";
+    sub.textContent = `${historyRouteLabel(turn)} · ${formatHistoryTime(turn.completedAt || turn.startedAt)}`;
+    const text = document.createElement("div");
+    text.className = "history-section-text";
+    text.textContent = `助手：${stripMarkdownBold(turn.assistantText)}`;
+    section.append(title, sub, text);
+    historyBody.append(section);
+  }
+}
+
+function historyRouteLabel(turn) {
+  if (turn.reason === "demo_mock") return "演示回答";
+  if (turn.route === "interaction") return "视觉理解";
+  return "普通对话";
+}
+
+function formatHistoryTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "时间未知";
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+function clearConversationHistory() {
+  if (!loadConversationHistory().length) {
+    renderConversationHistory();
+    return;
+  }
+  if (!window.confirm("确定清空全部历史对话吗？")) return;
+  localStorage.removeItem(HISTORY_STORAGE_KEY);
+  renderConversationHistory();
 }
 
 function updateVisionCard(message) {
