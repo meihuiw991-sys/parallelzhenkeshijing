@@ -13,7 +13,7 @@ Pro/
 
 ## 启动
 
-需要本机安装 Python 3.11 或更高版本。首次启动会在 `Parallel-core/.venv` 自动创建虚拟环境，并根据 `Parallel-core/requirements.txt` 安装依赖：
+需要本机安装 Python 3.11 或更高版本。启动脚本会依次查找 `python3.13`、`python3.12`、`python3.11` 和兼容的 `python3`。首次启动会在 `Parallel-core/.venv` 自动创建虚拟环境，并根据 `Parallel-core/requirements.txt` 安装依赖：
 
 首次运行前创建本地配置：
 
@@ -29,6 +29,12 @@ cd Pro
 ```
 
 项目运行不依赖 `Pro` 目录之外的文件。首次启动需要能够访问配置的 Python 包源。
+
+如果已有 `.venv` 是由 Python 3.10 或更低版本创建，启动脚本会自动删除并使用兼容版本重建。也可以手动指定：
+
+```bash
+PYTHON_BIN=python3.11 ./start.sh
+```
 
 上传或提交仓库时不要包含以下本机生成文件：
 

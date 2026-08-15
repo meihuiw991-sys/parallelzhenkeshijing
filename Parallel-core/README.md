@@ -43,6 +43,8 @@ Talker、Interaction 和 Voice 未配置 `MODEL_API_KEY_2` 时会回退使用 `M
 .venv
 ```
 
+脚本要求 Python 3.11+，并优先选择 `python3.13`、`python3.12`、`python3.11`。检测到旧版 Python 创建的 `.venv` 时会自动重建。
+
 推荐从上传目录根路径启动：
 
 ```bash
@@ -73,6 +75,12 @@ http://127.0.0.1:8010
 
 ```bash
 PORT=8080 ./start.sh
+```
+
+手动指定 Python：
+
+```bash
+PYTHON_BIN=python3.11 ./start.sh
 ```
 
 首次启动需要访问 Python 包源，并根据 `requirements.txt` 安装依赖。项目运行不依赖 `Pro` 目录之外的文件。
